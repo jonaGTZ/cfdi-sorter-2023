@@ -2,12 +2,13 @@
 # -*- coding: utf-8 -*-
 
 # script header
-# Author:           [Your name or nick]
+# Author:           [Hugo Berra Salazar, ]
 # Creation date:    [04/07/2023]
 # Description:      [Brief description of the purpose of the script]
 
 # import necessary modules
 import os
+from cfdi_sorter import cfdi_sorter
 
 # Function to clear the console screen
 def clear():
@@ -26,22 +27,22 @@ def select_municipality():
         print("0. Exit")
         opcion = input("\nSelect an option: ")
         if opcion == '1':
-            select_algorithm()
+            select_algorithm('MAP850101324')
         elif opcion == '2':
-            select_algorithm()
+            select_algorithm('MCM8501012U0')
         elif opcion == '3':
-            select_algorithm()
+            select_algorithm('MHS850101F67')
         elif opcion == '4':
-            select_algorithm()
+            select_algorithm('MOP850101NX1')
         elif opcion == '5':
-            select_algorithm()
+            select_algorithm('MTR9302155L8')
         elif opcion == '0':
             break
         else:
             input('Invalid option. Press Enter to try again...')
 
 # Function to show algorithms menu
-def select_algorithm():
+def select_algorithm(rfc):
     while True:
         clear()
         print("Menu [2] Select:")
@@ -52,6 +53,7 @@ def select_algorithm():
         opcion = input("\nSelect an option: ")
         if opcion == '1':
             print("Option 1 selected")
+            cfdi_sorter(rfc, 'Clientes/' + rfc[0:3] + '/')
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '2':
