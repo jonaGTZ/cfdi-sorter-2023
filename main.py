@@ -26,7 +26,7 @@ def select_municipality():
         print("5. MTR: MTR9302155L8")
         print("0. Exit")
         opcion = input("\nSelect an option: ")
-        if opcion == '1':
+        if opcion   == '1':
             select_algorithm('MAP850101324')
         elif opcion == '2':
             select_algorithm('MCM8501012U0')
@@ -58,6 +58,7 @@ def select_algorithm(rfc):
             break
         elif opcion == '2':
             print("Option 2 selected")
+            #
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '3':
