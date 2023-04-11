@@ -41,31 +41,35 @@ def filenames(directory):
                 yield os.path.join(root, file)
 
 def cfdi_sorter(rfc, directory):
-
     # Calls the function "filenames" Iterating over each XML file in the directory
     for filename in filenames(directory):
         try:
             # Parse the XML file with ElementTree
-            tree = ET.parse(filename)
-            root = tree.getroot()   
+            tree        = ET.parse(filename)
+            root        = tree.getroot()
 
-            # Get the value of the "TipoDeComprobante", "FormaPago", "MetodoPago" attributes
+            # Get the value of the "TipoDeComprobante" attribute
             tipo        = root.get(tipo_query)
-            metodo_pago = root.get(mpago_query)
-
             # Get the "Emisor" element
             emisor      = root.find(emisor_query)
             # Get the "Receptor" element
             receptor    = root.find(receptor_query)
-            
-            # Check if emisor, tipo and receptor are not None
-            if emisor is None or receptor is None:
+            # Get the value of the "MetodoPago" attribute
+            metodo_pago = root.get(mpago_query)
+
+            # Check if emisor, receptor, tipo, and metodo_pago are not None
+            if emisor is None or receptor is None or tipo is None or metodo_pago is None:
                 print(f"{filename} : E1: does not meet the requirements of the CFDI standard.")
                 shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
                 continue
 
+            # Check if the value of metodo_pago is valid
+            if metodo_pago not in ['PUE', 'PPD']:
+                print(f"{filename} : E2: MetodoPago is not valid: {metodo_pago}")
+                continue
+
             # Create the appropriate sub-subdirectory and copy the XML file based on the attribute values
-            if   tipo == 'I' and emisor.get('Rfc')      == rfc:
+            if  tipo == 'I' and emisor.get('Rfc')        == rfc:
                 subdirectory = ingresos_directory
             elif tipo == 'I' and receptor.get('Rfc')    == rfc:
                 subdirectory = gastos_receptor_directory
@@ -81,18 +85,13 @@ def cfdi_sorter(rfc, directory):
                 subdirectory = pagosE_directory
             elif tipo == 'P' and receptor.get('Rfc')    == rfc:
                 subdirectory = pagosR_directory
-            else:       
-                print(f"{filename} : E2: does not meet the requirements of the CFDI standard. Or Wrong RFC")
-                continue
-            
-            if metodo_pago == 'PPD':
-                subdirectory += "/PPD"
             else:
-                subdirectory += "/PUE"
+                print(f"{filename} : E3: does not meet the requirements of the CFDI standard. Or Wrong RFC")
+                continue
 
             # Create the sub-subdirectory inside the appropriate subdirectory
-            sub_subdirectory = os.path.join(emisor_directory, subdirectory) if emisor.get('Rfc') == rfc else os.path.join(receptor_directory, subdirectory)
-            
+            sub_subdirectory = os.path.join(emisor_directory, subdirectory, metodo_pago)
+
             try:
                 os.makedirs(os.path.join(rfc, sub_subdirectory))
             except FileExistsError:
