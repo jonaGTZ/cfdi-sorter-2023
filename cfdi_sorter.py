@@ -27,11 +27,19 @@ pagosE_directory            = 'Pagos'
 pagosR_directory            = 'Pagos'
 
 # Define the ElementPath queries
-emisor_query                = '{http://www.sat.gob.mx/cfd/3}Emisor'
-receptor_query              = '{http://www.sat.gob.mx/cfd/3}Receptor'
 tipo_query                  = 'TipoDeComprobante'
 mpago_query                 = 'MetodoPago'
-fpago_query                 = 'FormaPago'
+version_query               = 'Version'
+
+def get_cfdi_version(version):
+    if   version == '4.0':
+        emisor_query    = '{http://www.sat.gob.mx/cfd/4}Emisor'
+        receptor_query  = '{http://www.sat.gob.mx/cfd/4}Receptor'
+    elif version == '3.3':
+        emisor_query    = '{http://www.sat.gob.mx/cfd/3}Emisor'
+        receptor_query  = '{http://www.sat.gob.mx/cfd/3}Receptor'
+
+    return emisor_query, receptor_query
 
 def filenames(directory):
     for root, dirs, files in os.walk(directory):
@@ -50,10 +58,17 @@ def cfdi_sorter(rfc, directory):
 
             # Get the value of the "TipoDeComprobante" attribute
             tipo        = root.get(tipo_query)
+            version     = root.get(version_query)
+
             # Get the "Emisor" element
-            emisor      = root.find(emisor_query)
+            emisor_query, receptor_query = get_cfdi_version(version)
+
+            # Get the "Emisor" element
+            emisor = root.find(emisor_query)
+
             # Get the "Receptor" element
-            receptor    = root.find(receptor_query)
+            receptor = root.find(receptor_query)
+
             # Get the value of the "MetodoPago" attribute
             metodo_pago = root.get(mpago_query)
 
@@ -69,7 +84,7 @@ def cfdi_sorter(rfc, directory):
                 continue
 
             # Create the appropriate sub-subdirectory and copy the XML file based on the attribute values
-            if  tipo == 'I' and emisor.get('Rfc')        == rfc:
+            if   tipo == 'I' and emisor.get('Rfc')      == rfc:
                 subdirectory = ingresos_directory
             elif tipo == 'I' and receptor.get('Rfc')    == rfc:
                 subdirectory = gastos_receptor_directory
