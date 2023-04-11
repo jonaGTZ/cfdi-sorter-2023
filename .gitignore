@@ -1,3 +1,17 @@
+#BORRAR
+prueba.py
+script_01_sorterFiles.py
+script_03_xmlToPdf.py
+tandemlogo.png
+
+#skip dir
+Clientes/
+MAP850101324/
+MCM8501012U0/
+MHS850101F67/
+MOP850101NX1/
+MTR9302155L8/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
