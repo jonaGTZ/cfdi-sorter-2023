@@ -16,7 +16,16 @@ from openpyxl.styles    import Alignment
 from openpyxl           import load_workbook, Workbook
 from openpyxl.styles    import Color, Font, PatternFill
 
-def modify_headers(path):
+# Define the ElementPath queries
+version_query               = 'Version'
+
+def filenames(dir):
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            if file.endswith(".xml"):
+                yield os.path.join(root, file)
+
+def rename_xlsx_headers(path):
     wb = load_workbook(path)
     ws = wb.active
     headers = [cell.value for cell in ws[1]]
@@ -31,151 +40,113 @@ def modify_headers(path):
 
     for col_num, name in enumerate(headers, 1):
         cell = ws.cell(row=1, column=col_num, value=name)
-
     wb.save(path)
-    print('\nHeaders modified successfully')
+    print('xlsx modified successfully')
 
-def create_xlsx(type_option):
-    url = 'http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd'
-    response = urllib.request.urlopen(url)
+def get_cfdi_version(version):
+    if   version == '4.0':
+        emisor_query    = '{http://www.sat.gob.mx/cfd/4}Emisor'
+        receptor_query  = '{http://www.sat.gob.mx/cfd/4}Receptor'
+    elif version == '3.3':
+        emisor_query    = '{http://www.sat.gob.mx/cfd/3}Emisor'
+        receptor_query  = '{http://www.sat.gob.mx/cfd/3}Receptor'
 
-    tree = ET.parse(response)
-    root = tree.getroot()
+    return emisor_query, receptor_query
 
-    #get the names of node attributes from an XML file that defines the CFDI 3.3 standard
-    name_list = []
-    for nodo in root.iter():
-        if 'name' in nodo.attrib:
-            name_list.append(nodo.attrib['name'])
+def create_xlsx(rfc, option):
+    try:
+        # Use set() method to save attribute names reduces the amount of memory needed
+        url_cfdi40  = 'http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd'
+        url_cfdi33  = 'http://www.sat.gob.mx/sitio_internet/cfd/3/cfdv33.xsd'
+        cfdi40      = set()
+        cfdi33      = set()
 
-    # get actual date
-    fecha_actual = datetime.now().strftime('%m%d%Y-%H%M%S')
+        # Reads both CFDI standards and extracts the attribute names from each CFDI version. 
+        # These names are stored in two separate lists
+        with urllib.request.urlopen(url_cfdi40) as response:
+            tree = ET.parse(response)
+            root = tree.getroot()
 
-    # create destination paths for each report
-    ruta_ayudas     = 'CFDI_RFC_MUNICIPIO/Emisor/Ayudas/'
-    ruta_ingreso    = 'CFDI_RFC_MUNICIPIO/Emisor/Ingresos/'
-    ruta_nomina     = 'CFDI_RFC_MUNICIPIO/Emisor/Nomina/'
-    ruta_desbondev  = 'CFDI_RFC_MUNICIPIO/Receptor/Descuento_Bonificaciones_Devoluciones/'
-    ruta_gasto      = 'CFDI_RFC_MUNICIPIO/Receptor/Gastos/'
-    ruta_pago       = 'CFDI_RFC_MUNICIPIO/Receptor/Pagos/'
+            for nodo in root.iter():
+                if 'name' in nodo.attrib:
+                    cfdi40.add(nodo.attrib['name'])
 
-    #create an excel file with the names of the attributes in the index
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "comprobante_" + fecha_actual
-    header_font = Font(color='FFFFFF')
-    header_fill = PatternFill(start_color='730707', end_color='730707', fill_type='solid')
-    for col_num, name in enumerate(name_list, 1):
-        cell = ws.cell(row=1, column=col_num, value=name)
-        cell.font = header_font
-        cell.fill = header_fill
-    
-    # case type_option
-    if type_option   == 1:
-        ws.title = 'ayudas_' + fecha_actual
-        filename = 'ayudas_' + fecha_actual + '.xlsx'
-        directory = ruta_ayudas
-        xlsx_path = os.path.join(ruta_ayudas, filename)
-    elif type_option == 2:
-        ws.title = 'ingreso_' + fecha_actual
-        filename = 'ingreso_' + fecha_actual + '.xlsx'
-        directory = ruta_ingreso
-        xlsx_path = os.path.join(ruta_ingreso, filename)
-    elif type_option == 3:
-        ws.title = 'nomina_' + fecha_actual
-        filename = 'nomina_' + fecha_actual + '.xlsx'
-        directory = ruta_nomina
-        xlsx_path = os.path.join(ruta_nomina, filename)
-    elif type_option == 4:
-        ws.title = 'des_bon_dev_' + fecha_actual
-        filename = 'des_bon_dev_' + fecha_actual + '.xlsx'
-        directory = ruta_desbondev
-        xlsx_path = os.path.join(ruta_desbondev, filename)
-    elif type_option == 5:
-        ws.title = 'gasto_' + fecha_actual
-        filename = 'gasto_' + fecha_actual + '.xlsx'
-        directory = ruta_gasto
-        xlsx_path = os.path.join(ruta_gasto, filename)
-    elif type_option == 6:
-        ws.title = 'pago_' + fecha_actual
-        filename = 'pago_' + fecha_actual + '.xlsx'
-        directory = ruta_pago
-        xlsx_path = os.path.join(ruta_pago, filename)
-    elif type_option == 7:
-        return
-    
-    wb.save(xlsx_path)
-    print('\nXLSX file created successfully.')
-    
-    # function call that modifies the xlsx headers for elements repeated from the standard
-    try: 
-        modify_headers(xlsx_path)
-        
-        #traverses a directory and its subdirectories, looking for XML files
-        def filenames(directory):
-            for filename in os.listdir(directory):
-                if filename.endswith('.xml'):
-                    yield(os.path.join(directory, filename))
+        with urllib.request.urlopen(url_cfdi33) as response:
+            tree = ET.parse(response)
+            root = tree.getroot()
 
-        wb = load_workbook(xlsx_path)
+            for nodo in root.iter():
+                if 'name' in nodo.attrib:
+                    cfdi33.add(nodo.attrib['name'])
+                    
+        # Combine the two lists of attribute names, removing any duplicates, and store the results in a new list
+        attr_list = list(cfdi40 | cfdi33)
+
+        # Gets the current date and time
+        fecha_actual = datetime.now().strftime('%m%d%Y-%H%M%S')
+
+        # In the rfc folder and its corresponding subfolder, using the name of the previously created file.
+        try:
+            os.makedirs(os.path.join(rfc, option))
+            filename = f"{option}{fecha_actual}.xlsx"
+            xlsx_path = os.path.join(rfc, option, filename)
+        except FileExistsError:
+            pass
+
+        # Create an Excel file and format the header
+        wb = Workbook()
         ws = wb.active
-        headers = [cell.value for cell in ws[1]]
+        ws.title = f"comprobante_{fecha_actual}"
+        header_font = Font(color='FFFFFF')
+        header_fill = PatternFill(start_color='730707', end_color='730707', fill_type='solid')
 
-        #open the file "Report_CFDI.xlsx" and fill in the data rows corresponding to each XML file
-        for xml_file in filenames(directory):
-            try:
-                tree = ET.parse(xml_file)
-                root = tree.getroot()
+        # Write the names of the attributes of the digital tax receipts in the first row of the Excel sheet
+        for col_num, name in enumerate(attr_list, 1):
+            # Adding suffixes to indicate which CFDI version each attribute belongs to
+            if name in cfdi40 and name not in cfdi33:
+                name += '_V4'
+            elif name in cfdi33 and name not in cfdi40:
+                name += '_V3.3'
 
-                emisor      = root.find('{http://www.sat.gob.mx/cfd/3}Emisor')
-                receptor    = root.find('{http://www.sat.gob.mx/cfd/3}Receptor')
-
-                if emisor is not None and receptor is not None:
-                    row_data = {}
-                    for nodo in root.iter():
-                        if nodo.attrib:
-                            for key, value in nodo.attrib.items():
-                                if key in headers:
-                                    row_data['Rfc']             = str(emisor.get('Rfc'))
-                                    row_data['Rfc receptor']    = str(receptor.get('Rfc'))
-                                    row_data['Nombre']          = str(emisor.get('Nombre'))
-                                    row_data['Nombre receptor'] = str(receptor.get('Nombre'))
-                                    row_data[key]               = value
-                    if row_data:
-                        row_num = ws.max_row + 1
-                        for col_num, header in enumerate(headers, 1):
-                            if header in row_data:
-                                if header == 'Total' or header == 'SubTotal' or header == 'TotalImpuestosRetenidos' or header == 'Descuento' or header == 'Importe' or header == 'ValorUnitario' or header == 'Base' or header == 'TasaOCuota':
-                                    ws.cell(row=row_num, column=col_num, value=float(row_data[header]))
-                                    cell.alignment = Alignment(horizontal='right')
-                                else:
-                                    ws.cell(row=row_num, column=col_num, value=row_data[header])                
-
-            except ET.ParseError:
-                print(f'Error parsing {xml_file}: file does not comply with CFDI 3.3 standard')
-        #saving the values that correspond to each header.
+            cell = ws.cell(row=1, column=col_num, value=name)
+            cell.font = header_font
+            cell.fill = header_fill
+        # Save workbook
         wb.save(xlsx_path)
-        print('\nXLSX file modified successfully.')
+        return xlsx_path
+
     except Exception as e:
         print(f"Error: {e}")
 
-#displays a menu with three options: create the XLSX file, insert the XLSX file, and exit the program.
-def print_menu():
-    print('Select an option:')
-    print('1. report in excel for receipt type help')
-    print('2. report in excel for receipt type income')
-    print('3. report in excel for receipt type expense')
-    print('4. report in excel for receipt type discounts bonuses returns')
-    print('5. report in excel for receipt type spent')
-    print('6. report in excel for receipt type pay')
-    print('7. Exit')
-    
-while True:
-    print_menu()
-    selection = input('Enter your selection: ')
+def cfdi_to_xlsx(rfc, option, dir):
+
     try:
-        selection = int(selection)
-    except ValueError:
-        print('You must enter a whole number')
-        continue
-    create_xlsx(selection)
+        # 
+        path = create_xlsx(rfc, option)
+        rename_xlsx_headers(path)
+        # 
+        wb      = load_workbook(path)
+        ws      = wb.active
+        headers = [cell.value for cell in ws[1]]
+        
+    except Exception as e:
+        print(f"Error: {e}")
+
+    for filename in filenames(dir):
+        try:
+            tree = ET.parse(filename)
+            root = tree.getroot()
+
+            # Get the cfdi version
+            version                       = root.get(version_query)
+            emisor_query, receptor_query  = get_cfdi_version(version)
+
+            emisor      = root.find(emisor_query)
+            receptor    = root.find(receptor_query)
+
+        except ET.ParseError:
+            print(f"{filename} could not be parsed.")
+        except Exception as e:
+            print(f"{filename} could not be processed due to an error: {e}.")
+    
+
