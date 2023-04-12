@@ -9,10 +9,36 @@
 # import necessary modules
 import os
 from cfdi_sorter import cfdi_sorter
+from prueba import cfdi_to_xlsx
 
 # Function to clear the console screen
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
+
+def select_type_report(rfc, dir):
+    
+    options = {'1': 'ayudas', '2': 'ingreso', '3': 'gasto', '4': 'des_bon_dev', '5': 'gasto', '6': 'pagos'}
+
+    while True:
+        #clear()
+        print("Menu [3] Select a type report:")
+        print('Select an option:')
+        print('1. report in excel for receipt type help')
+        print('2. report in excel for receipt type income')
+        print('3. report in excel for receipt type issuer/expense')
+        print('4. report in excel for receipt type discounts bonuses returns')
+        print('5. report in excel for receipt type receiver/expense')
+        print('6. report in excel for receipt type pay')
+        print('7. Return to previous menu')
+    
+        opcion = input("\nSelect an option: ")
+
+        if options.get(opcion):
+            cfdi_to_xlsx(rfc, options.get(opcion), dir)
+        elif opcion == '7':
+            break
+        else:
+            input('Invalid option. Press Enter to try again...')
 
 # Function to display the municipalities menu
 def select_municipality():
@@ -53,12 +79,17 @@ def select_algorithm(rfc):
         opcion = input("\nSelect an option: ")
         if opcion == '1':
             print("Option 1 selected")
-            cfdi_sorter(rfc, 'Clientes/' + rfc[0:3] + '/')
+            #cfdi_sorter(rfc, 'Clientes/' + rfc[0:3] + '/')
+            """ 
+                XML DE PRUEBA 
+            """
+            cfdi_sorter(rfc, 'xml_new_data')
+            
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '2':
             print("Option 2 selected")
-            #
+            select_type_report(rfc, 'xml_new_data')
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '3':
