@@ -65,6 +65,31 @@ def get_cfdi_version(version):
         receptor_query  = '{http://www.sat.gob.mx/cfd/3}Receptor'
     return emisor_query, receptor_query
 
+def del_empty_columns(path):
+    # Load the workbook
+    wb = load_workbook(path)
+    ws = wb.active
+
+    # Find the maximum number of rows and columns
+    max_row = ws.max_row
+    max_col = ws.max_column
+
+    # Loop through each column
+    for col in range(1, max_col + 1):
+        # Check if all cells in column are empty starting from row 2
+        empty = True
+        for row in range(2, max_row + 1):
+            if ws.cell(row=row, column=col).value != None:
+                empty = False
+                break
+            
+        # If all cells are empty, delete the column
+        if empty:
+            ws.delete_cols(col, 1)
+    # Save the workbook
+    wb.save(path)
+    print(f'{path} xlsx deleted columns successfully.')
+
 def create_xlsx(rfc, option):
     try:
         # Use set() method to save attribute names reduces the amount of memory needed
@@ -94,7 +119,6 @@ def create_xlsx(rfc, option):
         # filter attributes only present in 4.0            
         attr_40_list = [attr for attr in cfdi40 if attr not in cfdi33]
 
-        
         # Gets the current date and time
         fecha_actual = datetime.now().strftime('%m%d%Y-%H%M%S')
 
@@ -122,7 +146,7 @@ def create_xlsx(rfc, option):
 
         # write headers for version 4.0
         for col_num, name in enumerate(attr_40_list, len(cfdi33) + 1):
-            cell = ws.cell(row=1, column=col_num, value=name + "_V40")
+            cell = ws.cell(row=1, column=col_num, value=name)
             cell.font = header_font
             cell.fill = header_fill
 
@@ -138,6 +162,7 @@ def cfdi_to_xlsx(rfc, option):
     # 
     path = create_xlsx(rfc, option)
     rename_xlsx_headers(path)
+
     # 
     wb      = load_workbook(path)
     ws      = wb.active
@@ -181,3 +206,5 @@ def cfdi_to_xlsx(rfc, option):
             print(f"{filename} could not be parsed.")
         except Exception as e:
             print(f"{filename} could not be processed due to an error: {e}.")
+        
+    del_empty_columns(path)
