@@ -8,16 +8,17 @@
 
 # import necessary modules
 import os
-from cfdi_sorter import cfdi_sorter
-from prueba import cfdi_to_xlsx
+
+from cfdi_sorter    import cfdi_sorter
+from xlsx_report    import cfdi_to_xlsx
 
 # Function to clear the console screen
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
-def select_type_report(rfc, dir):
+def select_type_report(rfc):
     
-    options = {'1': 'ayudas', '2': 'ingreso', '3': 'gasto', '4': 'des_bon_dev', '5': 'gasto', '6': 'pagos'}
+    options = {'1': 'AYUDAS', '2': 'INGRESO', '3': 'GASTOE', '4': 'DES_BON_DEV', '5': 'GASTOR', '6': 'PAGOS', '7': 'NOMINA'}
 
     while True:
         #clear()
@@ -29,12 +30,13 @@ def select_type_report(rfc, dir):
         print('4. report in excel for receipt type discounts bonuses returns')
         print('5. report in excel for receipt type receiver/expense')
         print('6. report in excel for receipt type pay')
-        print('7. Return to previous menu')
+        print('7. report in excel for type of payroll receipt')
+        print('8. Return to previous menu')
     
         opcion = input("\nSelect an option: ")
 
         if options.get(opcion):
-            cfdi_to_xlsx(rfc, options.get(opcion), dir)
+            cfdi_to_xlsx(rfc, options.get(opcion))
         elif opcion == '7':
             break
         else:
@@ -49,18 +51,28 @@ def select_municipality():
         print("2. MCM: MCM8501012U0")
         print("3. MHS: MHS850101F67")
         print("4. MOP: MOP850101NX1")
-        print("5. MTR: MTR9302155L8")
+        print("5. MTR: MTR93032155L8")
         print("0. Exit")
         opcion = input("\nSelect an option: ")
         if opcion   == '1':
+            clear()
+            print('Atexcal, Puebla Municipality')
             select_algorithm('MAP850101324')
         elif opcion == '2':
+            clear()
+            print('Cañada Morelos Municipality')
             select_algorithm('MCM8501012U0')
         elif opcion == '3':
+            clear()
+            print('Huitzilan de Serdán Municipality')
             select_algorithm('MHS850101F67')
         elif opcion == '4':
+            clear()
+            print('Ocoyucan Puebla Municipality')
             select_algorithm('MOP850101NX1')
         elif opcion == '5':
+            clear()
+            print('Tepexi de Rodríguez Municipality')
             select_algorithm('MTR9302155L8')
         elif opcion == '0':
             break
@@ -70,15 +82,15 @@ def select_municipality():
 # Function to show algorithms menu
 def select_algorithm(rfc):
     while True:
-        clear()
-        print("Menu [2] Select:")
+        #clear()
+        print(f"{rfc} Menu [2] Select:")
         print("1. Sort the xml by type of receipt and methot of payment")
         print("2. Create report Excel (xlsx)")
         print("3. Create files pdf (xml to pdf)")
         print("4. Return to previous menu")
         opcion = input("\nSelect an option: ")
         if opcion == '1':
-            print("Option 1 selected")
+            print(f"{rfc} : Sort the xml by type of receipt and methot of payment")
             #cfdi_sorter(rfc, 'Clientes/' + rfc[0:3] + '/')
             """ 
                 XML DE PRUEBA 
@@ -88,12 +100,12 @@ def select_algorithm(rfc):
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '2':
-            print("Option 2 selected")
-            select_type_report(rfc, 'xml_new_data')
-            input("Press Enter to return to the main menu...")
+            clear()
+            print(f"{rfc}: Create report Excel (xlsx)")
+            select_type_report(rfc)
             break
         elif opcion == '3':
-            print("Option 3 selected")
+            print(f"{rfc}Create files pdf (xml to pdf")
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '4':
