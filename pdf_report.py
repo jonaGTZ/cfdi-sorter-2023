@@ -353,7 +353,7 @@ def drawQR(c, x, y, url):
     renderPDF.draw(d, c, x, y)
     return y 
 
-def generate_pdf(xml_file, pdf_file):
+def canvas_pdf_parser(xml_file, pdf_file):
     # read the XML file using the minidom module
     cfdi = minidom.parse(xml_file)
     
@@ -588,17 +588,19 @@ def filenames(directory):
             if file.endswith('.xml'):
                 yield os.path.join(root, file)
 
-# create the main folder "RFC_Municipio" if it does not exist
-if not os.path.exists('RFC_Municipio'):
-    os.makedirs('RFC_Municipio')
+def generate_pdf(rfc):
+    dir = f'{rfc}/RFC_Municipio'
+    # create the main folder "RFC_Municipio" if it does not exist
+    if not os.path.exists(dir):
+        os.makedirs(dir)
 
-for filename in filenames(directory):
-    # get the path of the directory containing the xml file
-    xml_dir = os.path.dirname(filename)
-    # create the same subdirectory structure in the "RFC_Municipio" folder
-    pdf_dir = os.path.join('RFC_Municipio', xml_dir)
-    if not os.path.exists(pdf_dir):
-        os.makedirs(pdf_dir)
-    # generate the pdf file inside the corresponding folder
-    pdf_file = os.path.join(pdf_dir, os.path.basename(filename).replace('.xml', '.pdf'))
-    generate_pdf(filename, pdf_file)
+    for filename in filenames(directory):
+        # get the path of the directory containing the xml file
+        xml_dir = os.path.dirname(filename)
+        # create the same subdirectory structure in the "RFC_Municipio" folder
+        pdf_dir = os.path.join(dir, xml_dir)
+        if not os.path.exists(pdf_dir):
+            os.makedirs(pdf_dir)
+        # generate the pdf file inside the corresponding folder
+        pdf_file = os.path.join(pdf_dir, os.path.basename(filename).replace('.xml', '.pdf'))
+        canvas_pdf_parser(filename, pdf_file)

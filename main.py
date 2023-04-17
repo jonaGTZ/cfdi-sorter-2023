@@ -8,17 +8,13 @@
 
 # import necessary modules
 import os
-
 from cfdi_sorter import cfdi_sorter
 from xlsx_report import cfdi_to_xlsx, xlsx_general_report
-import pdf_report
+from pdf_report  import generate_pdf
 
 # Function to clear the console screen
-
-
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
-
 
 def select_type_report(rfc):
 
@@ -26,7 +22,7 @@ def select_type_report(rfc):
                '4': 'DES_BON_DEV', '5': 'GASTOR', '6': 'PAGOS', '7': 'NOMINA'}
 
     while True:
-        # clear()
+        clear()
         print("Menu [3] Select a type report:")
         print('Select an option:')
         print('1. report in excel for receipt type help')
@@ -52,8 +48,6 @@ def select_type_report(rfc):
             input('Invalid option. Press Enter to try again...')
 
 # Function to display the municipalities menu
-
-
 def select_municipality():
     while True:
         clear()
@@ -91,8 +85,6 @@ def select_municipality():
             input('Invalid option. Press Enter to try again...')
 
 # Function to show algorithms menu
-
-
 def select_algorithm(rfc):
     while True:
         # clear()
@@ -117,14 +109,14 @@ def select_algorithm(rfc):
             select_type_report(rfc)
             break
         elif opcion == '3':
-            print(f"{rfc}Create files pdf (xml to pdf")
+            print(f"{rfc} Create files pdf (xml to pdf)")
+            generate_pdf(rfc)
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '4':
             break
         else:
             input('Invalid option. Press Enter to try again...')
-
 
 # Main script code
 if __name__ == '__main__':
