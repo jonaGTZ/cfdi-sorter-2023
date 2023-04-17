@@ -589,7 +589,7 @@ def filenames(directory):
                 yield os.path.join(root, file)
 
 def generate_pdf(rfc):
-    dir = f'{rfc}/RFC_Municipio'
+    dir = f'{rfc}/Reportes PDF'
     # create the main folder "RFC_Municipio" if it does not exist
     if not os.path.exists(dir):
         os.makedirs(dir)
