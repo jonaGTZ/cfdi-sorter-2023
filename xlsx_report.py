@@ -11,10 +11,13 @@ import os
 import urllib.request
 import xml.etree.ElementTree as ET
 
+import pandas as pd
+
 from datetime           import datetime
 from openpyxl.styles    import Alignment
 from openpyxl           import load_workbook, Workbook
 from openpyxl.styles    import Color, Font, PatternFill
+from zipfile            import BadZipFile
 
 # Define the ElementPath queries
 version_query               = 'Version'
@@ -208,3 +211,54 @@ def cfdi_to_xlsx(rfc, option):
             print(f"{filename} could not be processed due to an error: {e}.")
         
     del_empty_columns(path)
+
+def xlsx_general_report(rfc):
+    # Set the directory paths
+    directories = [
+        f'/{rfc}/AYUDAS', 
+        f'/{rfc}/INGRESO', 
+        f'/{rfc}/GASTOE', 
+        f'/{rfc}/NOMINA', 
+        f'/{rfc}/DES_BON_DEV', 
+        f'/{rfc}/GASTOR', 
+        f'/{rfc}/PAGOS'
+    ]
+
+    # Initialize empty list to store file paths
+    file_paths = []
+
+    # Get the most recent file from each directory
+    for directory in directories:
+        path = os.getcwd() + directory
+        if os.path.exists(path):
+            # Get the most recent file in the directory
+            files = os.listdir(path)
+            if files:
+                file_path = max([os.path.join(path, f) for f in files if f.endswith('.xlsx')], key=os.path.getctime)
+                file_paths.append(file_path)
+            else:
+                print(f"No se encontró ningún archivo en {path}")
+        else:
+            print(f"La ruta solicitada no existe: {path}")
+
+    # Create a Pandas Excel writer using openpyxl
+    writer = pd.ExcelWriter('output.xlsx', engine='openpyxl')
+
+    # Loop through each Excel file and write its contents to a separate sheet
+    for file_path in file_paths:
+        try:
+            # Read the Excel file into a Pandas DataFrame
+            df = pd.read_excel(file_path, engine='openpyxl')
+        except:
+            print(f"Error leyendo el archivo {file_path}")
+            continue
+
+        # Write the DataFrame to a sheet with the same name as the file
+        sheet_name = os.path.splitext(os.path.basename(file_path))[0]
+        df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    # Save the Excel file
+    writer.save()
+    writer.close()
+
+xlsx_general_report('MHS850101F67')

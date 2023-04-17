@@ -10,7 +10,8 @@
 import os
 
 from cfdi_sorter    import cfdi_sorter
-from xlsx_report    import cfdi_to_xlsx
+from xlsx_report    import cfdi_to_xlsx, xlsx_general_report
+import pdf_report
 
 # Function to clear the console screen
 def clear():
@@ -30,14 +31,18 @@ def select_type_report(rfc):
         print('4. report in excel for receipt type discounts bonuses returns')
         print('5. report in excel for receipt type receiver/expense')
         print('6. report in excel for receipt type pay')
-        print('7. report in excel for type of payroll receipt')
-        print('8. Return to previous menu')
+        print('7. report in excel for receipt type payroll')
+        print('8. report in excel to receive all types')
+        print('9. Return to previous menu')
     
         opcion = input("\nSelect an option: ")
 
         if options.get(opcion):
             cfdi_to_xlsx(rfc, options.get(opcion))
-        elif opcion == '7':
+        elif opcion == '8':
+            xlsx_general_report(rfc)
+        elif opcion == '9':
+            input("Press Enter to return to the main menu...")
             break
         else:
             input('Invalid option. Press Enter to try again...')
@@ -91,12 +96,11 @@ def select_algorithm(rfc):
         opcion = input("\nSelect an option: ")
         if opcion == '1':
             print(f"{rfc} : Sort the xml by type of receipt and methot of payment")
-            #cfdi_sorter(rfc, 'Clientes/' + rfc[0:3] + '/')
+            # cfdi_sorter(rfc, 'Clientes/' + rfc[0:3] + '/')
             """ 
                 XML DE PRUEBA 
             """
             cfdi_sorter(rfc, 'xml_new_data')
-            
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '2':
@@ -113,8 +117,8 @@ def select_algorithm(rfc):
         else:
             input('Invalid option. Press Enter to try again...')
 
-# Código principal del script
+# Main script code
 if __name__ == '__main__':
-    # Código que se ejecuta cuando el script se llama directamente
+    # Code that is executed when the script is called directly
     select_municipality()
     pass
