@@ -9,20 +9,24 @@
 # import necessary modules
 import os
 
-from cfdi_sorter    import cfdi_sorter
-from xlsx_report    import cfdi_to_xlsx, xlsx_general_report
+from cfdi_sorter import cfdi_sorter
+from xlsx_report import cfdi_to_xlsx, xlsx_general_report
 import pdf_report
 
 # Function to clear the console screen
+
+
 def clear():
     os.system('cls' if os.name == 'nt' else 'clear')
 
+
 def select_type_report(rfc):
-    
-    options = {'1': 'AYUDAS', '2': 'INGRESO', '3': 'GASTOE', '4': 'DES_BON_DEV', '5': 'GASTOR', '6': 'PAGOS', '7': 'NOMINA'}
+
+    options = {'1': 'AYUDAS', '2': 'INGRESO', '3': 'GASTOE',
+               '4': 'DES_BON_DEV', '5': 'GASTOR', '6': 'PAGOS', '7': 'NOMINA'}
 
     while True:
-        #clear()
+        # clear()
         print("Menu [3] Select a type report:")
         print('Select an option:')
         print('1. report in excel for receipt type help')
@@ -34,7 +38,7 @@ def select_type_report(rfc):
         print('7. report in excel for receipt type payroll')
         print('8. report in excel to receive all types')
         print('9. Return to previous menu')
-    
+
         opcion = input("\nSelect an option: ")
 
         if options.get(opcion):
@@ -48,6 +52,8 @@ def select_type_report(rfc):
             input('Invalid option. Press Enter to try again...')
 
 # Function to display the municipalities menu
+
+
 def select_municipality():
     while True:
         clear()
@@ -59,7 +65,7 @@ def select_municipality():
         print("5. MTR: MTR93032155L8")
         print("0. Exit")
         opcion = input("\nSelect an option: ")
-        if opcion   == '1':
+        if opcion == '1':
             clear()
             print('Atexcal, Puebla Municipality')
             select_algorithm('MAP850101324')
@@ -85,9 +91,11 @@ def select_municipality():
             input('Invalid option. Press Enter to try again...')
 
 # Function to show algorithms menu
+
+
 def select_algorithm(rfc):
     while True:
-        #clear()
+        # clear()
         print(f"{rfc} Menu [2] Select:")
         print("1. Sort the xml by type of receipt and methot of payment")
         print("2. Create report Excel (xlsx)")
@@ -116,6 +124,7 @@ def select_algorithm(rfc):
             break
         else:
             input('Invalid option. Press Enter to try again...')
+
 
 # Main script code
 if __name__ == '__main__':
