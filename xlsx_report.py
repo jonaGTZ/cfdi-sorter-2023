@@ -10,7 +10,7 @@
 import os
 import urllib.request
 import xml.etree.ElementTree as ET
-
+import openpyxl
 import pandas as pd
 
 from datetime import datetime
@@ -240,7 +240,7 @@ def xlsx_general_report(rfc):
         f'/{rfc}/report_excel/PAGOS'
     ]
 
-    # Initialize empty list to store file paths
+ # Initialize empty list to store file paths
     file_paths = []
 
     # Get the most recent file from each directory
@@ -258,26 +258,32 @@ def xlsx_general_report(rfc):
         else:
             print(f"Doesn't exist: {path}")
 
-    # Create a Pandas Excel writer using openpyxl
-    writer = pd.ExcelWriter(f'{rfc}_{fecha_actual}.xlsx', engine='openpyxl')
+    # Create an Excel workbook using openpyxl
+    wb = openpyxl.Workbook()
 
     # Loop through each Excel file and write its contents to a separate sheet
     for file_path in file_paths:
         try:
             # Read the Excel file into a Pandas DataFrame
-            df = pd.read_excel(file_path, engine='openpyxl')
+            wb_temp = openpyxl.load_workbook(file_path)
+
+            # Write the contents of the workbook to a sheet with the same name as the file
+            sheet_name = os.path.splitext(os.path.basename(file_path))[0]
+            ws = wb.create_sheet(title=sheet_name)
+            for sheet in wb_temp:
+                for row in sheet.iter_rows():
+                    row_values = []
+                    for cell in row:
+                        row_values.append(cell.value)
+                    ws.append(row_values)
+
         except:
-            print(f"Error leyendo el archivo {file_path}")
+            print(f"Can not read the file: {file_path}")
             continue
 
-        # Write the DataFrame to a sheet with the same name as the file
-        sheet_name = os.path.splitext(os.path.basename(file_path))[0]
-        df.to_excel(writer, sheet_name=sheet_name, index=False)
-
     # Save the Excel file
-    if file_path:
-        writer.save()
-        writer.close()
+    if file_paths:
+        wb.save(f'{rfc}_{fecha_actual}.xlsx')
     else:
         print('No data was found')
 
