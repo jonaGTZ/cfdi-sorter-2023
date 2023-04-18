@@ -7,6 +7,7 @@
 # Description:      [Brief description of the purpose of the script]
 
 # import necessary modules
+from csv import writer
 import os
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -239,9 +240,9 @@ def xlsx_general_report(rfc):
     # Initialize empty list to store file paths
     file_paths = []
 
-    # Get the most recent file from each directory
+ # Get the most recent file from each directory
     for directory in directories:
-        path = os.getcwd() + directory
+        path = directory
         if os.path.exists(path):
             # Get the most recent file in the directory
             files = os.listdir(path)
@@ -254,36 +255,48 @@ def xlsx_general_report(rfc):
         else:
             print(f"Doesn't exist: {path}")
 
-    # Create a Pandas Excel writer using openpyxl
-    writer = pd.ExcelWriter(f'{rfc}_{fecha_actual}.xlsx', engine='openpyxl')
+    # Create a new workbook
+    new_workbook = Workbook()
 
     # Loop through each Excel file and write its contents to a separate sheet
     for file_path in file_paths:
         try:
-            # Read the Excel file into a Pandas DataFrame
-            df = pd.read_excel(file_path, engine='openpyxl')
+            # Load the workbook using openpyxl
+            workbook = load_workbook(file_path)
+
+            # Get the active worksheet
+            worksheet = workbook.active
+
+            # Get the sheet name
+            sheet_name = worksheet.title
+
+            # Create a new sheet in the new workbook with the same name
+            new_sheet = new_workbook.create_sheet(sheet_name)
+
+            # Copy the data from the old worksheet to the new worksheet
+            for row in worksheet.iter_rows(values_only=True):
+                new_sheet.append(row)
+
+            # Change the font color and fill color of the headers
+            for cell in new_sheet[1]:
+                cell.font = Font(color='FFFFFF')
+                cell.fill = PatternFill(
+                    start_color='730707', end_color='730707', fill_type='solid')
+
         except:
-            print(f"Error trying reading:  {file_path}")
+            print(f"Can't read: {file_path}")
             continue
 
-        # Write the DataFrame to a sheet with the same name as the file
-        sheet_name = os.path.splitext(os.path.basename(file_path))[0]
-        df.to_excel(writer, sheet_name=sheet_name, index=False)
+    # Delete any extra sheets that were created in the new workbook
+    while len(new_workbook.sheetnames) > len(file_paths):
+        new_workbook.remove(new_workbook.active)
 
-        # Get the worksheet object
-        worksheet = writer.sheets[sheet_name]
+    # Save the new workbook
+    try:
+        new_workbook.save()
+        new_workbook.close()
+    except:
+        print('Error saving the new workbook')
 
-        # Change the font color and fill color of the headers
-        header_font = Font(color='FFFFFF')
-        header_fill = PatternFill(
-            start_color='730707', end_color='730707', fill_type='solid')
-        for cell in worksheet[1]:
-            cell.font = header_font
-            cell.fill = header_fill
 
-    # Save the Excel file
-    if file_path:
-        writer.save()
-        writer.close()
-    else:
-        print('No data was found')
+xlsx_general_report('MHS850101F67')
