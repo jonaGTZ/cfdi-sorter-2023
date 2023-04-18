@@ -297,8 +297,8 @@ def xlsx_general_report(rfc):
 
     # Save the new workbook
     try:
-        writer.save()
-        writer.close()
+        new_workbook.save()
+        new_workbook.close()
     except:
         print('Error saving the new workbook')
 
