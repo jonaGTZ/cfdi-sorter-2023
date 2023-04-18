@@ -60,24 +60,14 @@ def select_municipality():
         print("0. Exit")
         opcion = input("\nSelect an option: ")
         if opcion == '1':
-            clear()
-            print('Atexcal, Puebla Municipality')
             select_algorithm('MAP850101324')
         elif opcion == '2':
-            clear()
-            print('Cañada Morelos Municipality')
             select_algorithm('MCM8501012U0')
         elif opcion == '3':
-            clear()
-            print('Huitzilan de Serdán Municipality')
             select_algorithm('MHS850101F67')
         elif opcion == '4':
-            clear()
-            print('Ocoyucan Puebla Municipality')
             select_algorithm('MOP850101NX1')
         elif opcion == '5':
-            clear()
-            print('Tepexi de Rodríguez Municipality')
             select_algorithm('MTR9302155L8')
         elif opcion == '0':
             break
@@ -87,24 +77,21 @@ def select_municipality():
 # Function to show algorithms menu
 def select_algorithm(rfc):
     while True:
-        # clear()
+        clear()
         print(f"{rfc} Menu [2] Select:")
         print("1. Sort the xml by type of receipt and methot of payment")
         print("2. Create report Excel (xlsx)")
         print("3. Create files pdf (xml to pdf)")
         print("4. Return to previous menu")
+
         opcion = input("\nSelect an option: ")
+
         if opcion == '1':
             print(f"{rfc} : Sort the xml by type of receipt and methot of payment")
-            # cfdi_sorter(rfc, 'Clientes/' + rfc[0:3] + '/')
-            """ 
-                XML DE PRUEBA 
-            """
-            cfdi_sorter(rfc, 'xml_new_data')
+            cfdi_sorter(rfc, f'Clientes/{rfc[0:3]}/')
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '2':
-            clear()
             print(f"{rfc}: Create report Excel (xlsx)")
             select_type_report(rfc)
             break
