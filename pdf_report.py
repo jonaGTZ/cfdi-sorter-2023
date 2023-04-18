@@ -6,14 +6,6 @@
 # Creation date:    [13/07/2023]
 # Description:      [Brief description of the purpose of the script]
 
-# -- ========================================================================================
-# -- Author: <Hugo Berra Salazar>
-# -- Create Date: <23/02/2023>
-# -- Description: <algorithm to go through a directory with xml files and generate a CFDI in PDF format with the reportlab module>
-# -- Params In: 
-# -- Params Out: 
-# -- ========================================================================================
-
 # pdf build modules
 from reportlab.pdfgen               import canvas
 from reportlab.lib.utils            import ImageReader
