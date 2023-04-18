@@ -274,12 +274,6 @@ def xlsx_general_report(rfc):
             # Get the sheet name
             sheet_name = worksheet.title
 
-            # Check if the sheet is empty
-            if worksheet.dimensions == "A1":
-                print(
-                    f"The sheet '{sheet_name}' in file '{file_path}' is empty and will not be copied")
-                continue
-
             # Create a new sheet in the new workbook with the same name
             new_sheet = new_workbook.create_sheet(sheet_name)
 
@@ -296,6 +290,10 @@ def xlsx_general_report(rfc):
         except:
             print(f"Can't read: {file_path}")
             continue
+
+    # Delete any extra sheets that were created in the new workbook
+    while len(new_workbook.sheetnames) > len(file_paths):
+        new_workbook.remove(new_workbook.active)
 
     # Save the new workbook
     try:
