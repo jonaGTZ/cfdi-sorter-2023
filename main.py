@@ -22,7 +22,7 @@ def select_type_report(rfc):
                '4': 'DES_BON_DEV', '5': 'GASTOR', '6': 'PAGOS', '7': 'NOMINA'}
 
     while True:
-        clear()
+        #clear()
         print("Menu [3] Select a type report:")
         print('Select an option:')
         print('1. report in excel for receipt type help')
@@ -41,6 +41,7 @@ def select_type_report(rfc):
             cfdi_to_xlsx(rfc, options.get(opcion))
         elif opcion == '8':
             xlsx_general_report(rfc)
+            input("Press Enter to return to the main menu...")
         elif opcion == '9':
             input("Press Enter to return to the main menu...")
             break
@@ -87,7 +88,7 @@ def select_algorithm(rfc):
         opcion = input("\nSelect an option: ")
 
         if opcion == '1':
-            print(f"{rfc} : Sort the xml by type of receipt and methot of payment")
+            print(f"{rfc} : Sort the xml by type of receipt and methot of payment in progress")
             cfdi_sorter(rfc, f'Clientes/{rfc[0:3]}/')
             input("Press Enter to return to the main menu...")
             break

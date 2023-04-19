@@ -93,7 +93,7 @@ def del_empty_columns(path):
         # Check if all cells in column are empty starting from row 2
         empty = True
         for row in range(2, max_row + 1):
-            if ws.cell(row=row, column=col).value != None or ws.cell(row=row, column=col).value != "":
+            if ws.cell(row=row, column=col).value != None and ws.cell(row=row, column=col).value != "":
                 empty = False
                 break
 
@@ -146,7 +146,7 @@ def create_xlsx(rfc, option):
         # Create an Excel file and format the header
         wb          = Workbook()
         ws          = wb.active
-        ws.title    = f"{option}_{fecha_actual}"
+        ws.title    = f"{option}-{fecha_actual}"
         header_font = Font(color='FFFFFF')
         header_fill = PatternFill(
         start_color ='730707', end_color='730707', fill_type='solid')
@@ -188,11 +188,11 @@ def cfdi_to_xlsx(rfc, option):
             root = tree.getroot()
 
             # Get the cfdi version
-            version = root.get(version_query)
+            version     = root.get(version_query)
             emisor_query, receptor_query = get_cfdi_version(version)
 
-            emisor = root.find(emisor_query)
-            receptor = root.find(receptor_query)
+            emisor      = root.find(emisor_query)
+            receptor    = root.find(receptor_query)
 
             if emisor is not None and receptor is not None:
                 row_data = {}
@@ -226,77 +226,68 @@ def cfdi_to_xlsx(rfc, option):
 
 
 def xlsx_general_report(rfc):
+
+    print('... xlsx in process, please wait.')
+
     # Set the directory paths
     directories = [
-        f'/{rfc}/xlsx_report/AYUDAS',
-        f'/{rfc}/xlsx_report/INGRESO',
-        f'/{rfc}/xlsx_report/GASTOE',
-        f'/{rfc}/xlsx_report/NOMINA',
-        f'/{rfc}/xlsx_report/DES_BON_DEV',
-        f'/{rfc}/xlsx_report/GASTOR',
-        f'/{rfc}/xlsx_report/PAGOS'
+        f'{rfc}/xlsx_report/AYUDAS',
+        f'{rfc}/xlsx_report/INGRESO',
+        f'{rfc}/xlsx_report/GASTOE',
+        f'{rfc}/xlsx_report/NOMINA',
+        f'{rfc}/xlsx_report/DES_BON_DEV',
+        f'{rfc}/xlsx_report/GASTOR',
+        f'{rfc}/xlsx_report/PAGOS'
     ]
 
     # Initialize empty list to store file paths
     file_paths = []
 
- # Get the most recent file from each directory
+    # Get the most recent file from each directory
     for directory in directories:
-        path = directory
-        if os.path.exists(path):
+        if os.path.exists(directory):
             # Get the most recent file in the directory
-            files = os.listdir(path)
+            files = os.listdir(directory)
             if files:
-                file_path = max([os.path.join(path, f) for f in files if f.endswith(
-                    '.xlsx')], key=os.path.getctime)
+                file_path = max([os.path.join(directory, f) for f in files if f.endswith('.xlsx')], key=os.path.getctime)
                 file_paths.append(file_path)
             else:
-                print(f"Can't find the route: {path}")
+                print(f"E1: Can't find the route: {directory}")
         else:
-            print(f"Doesn't exist: {path}")
+            print(f"E2: Doesn't exist: {directory}")
 
     # Create a new workbook
-    new_workbook = Workbook()
+    nwb = Workbook()
 
     # Loop through each Excel file and write its contents to a separate sheet
     for file_path in file_paths:
         try:
-            # Load the workbook using openpyxl
-            workbook = load_workbook(file_path)
-
-            # Get the active worksheet
-            worksheet = workbook.active
-
-            # Get the sheet name
-            sheet_name = worksheet.title
-
-            # Create a new sheet in the new workbook with the same name
-            new_sheet = new_workbook.create_sheet(sheet_name)
+            # Load workbook, active worksheet, get the sheet name, create a new sheet
+            wb = load_workbook(file_path)
+            ws = wb.active
+            sn = ws.title
+            ns = nwb.create_sheet(sn)
 
             # Copy the data from the old worksheet to the new worksheet
-            for row in worksheet.iter_rows(values_only=True):
-                new_sheet.append(row)
+            for row in ws.iter_rows(values_only=True):
+                ns.append(row)
 
             # Change the font color and fill color of the headers
-            for cell in new_sheet[1]:
+            for cell in ns[1]:
                 cell.font = Font(color='FFFFFF')
                 cell.fill = PatternFill(
                     start_color='730707', end_color='730707', fill_type='solid')
 
-        except:
-            print(f"Can't read: {file_path}")
+        except Exception as e:
+            print(f'E3: Error while reading book: {e}')
             continue
 
     # Delete any extra sheets that were created in the new workbook
-    while len(new_workbook.sheetnames) > len(file_paths):
-        new_workbook.remove(new_workbook.active)
+    while len(nwb.sheetnames) > len(file_paths):
+        nwb.remove(nwb.active)
 
     # Save the new workbook
     try:
-        new_workbook.save()
-        new_workbook.close()
-    except:
-        print('Error saving the new workbook')
-
-
-xlsx_general_report('MHS850101F67')
+        nwb.save(f'{rfc}/reporte-general-{fecha_actual}.xlsx')
+    except Exception as e:
+        print(f'E4: Error saving the new workbook: {e}')
