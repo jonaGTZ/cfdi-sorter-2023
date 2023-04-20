@@ -7,18 +7,13 @@
 # Description:      [Brief description of the purpose of the script]
 
 # import necessary modules
-from csv import writer
 import os
 import urllib.request
 import xml.etree.ElementTree as ET
 
-import pandas as pd
-
 from datetime           import datetime
-from openpyxl.styles    import Alignment
 from openpyxl           import load_workbook, Workbook
-from openpyxl.styles    import Color, Font, PatternFill
-from zipfile            import BadZipFile
+from openpyxl.styles    import Font, PatternFill
 
 # Define the ElementPath queries
 version_query = 'Version'
@@ -26,6 +21,11 @@ version_query = 'Version'
 # Gets the current date and time
 fecha_actual  = datetime.now().strftime('%m%d%Y-%H%M%S')
 
+def filenames(dir):
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            if file.endswith(".xml"):
+                yield os.path.join(root, file)
 
 def get_dir_path_data(option):
     dirs = {
@@ -39,35 +39,24 @@ def get_dir_path_data(option):
     }
     return dirs.get(option)
 
-
-def filenames(dir):
-    for root, dirs, files in os.walk(dir):
-        for file in files:
-            if file.endswith(".xml"):
-                yield os.path.join(root, file)
-
-
 def rename_xlsx_headers(path):
-    #
+    # Load workbook and get active worksheet and headers from first row
     wb      = load_workbook(path)
     ws      = wb.active
     headers = [cell.value for cell in ws[1]]
-    count   = {}
     
-    #
+    # Count the occurrences of each header and rename if necessary
+    count = {}
     for i, header in enumerate(headers):
         if header in count:
-            count[header] += 1
-            headers[i] = f"{header} receptor"
+            count[header]   += 1
+            headers[i]      = f"{header} receptor"
         else:
-            count[header] = 0
+            count[header]   = 0
 
-    for col_num, name in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_num, value=name)
-
+    # Save modified workbook and print success message
     wb.save(path)
     print(f'{path}: xlsx namespaces modified successfully')
-
 
 def get_cfdi_version(version):
     if version == '4.0':
@@ -76,18 +65,18 @@ def get_cfdi_version(version):
     elif version == '3.3':
         emisor_query    = '{http://www.sat.gob.mx/cfd/3}Emisor'
         receptor_query  = '{http://www.sat.gob.mx/cfd/3}Receptor'
-    return emisor_query, receptor_query
 
+    return emisor_query, receptor_query
 
 def del_empty_columns(path):
     # Load the workbook
-    wb = load_workbook(path)
-    ws = wb.active
+    wb      = load_workbook(path)
+    ws      = wb.active
 
     # Find the maximum number of rows and columns
     max_row = ws.max_row
     max_col = ws.max_column
-
+    
     # Loop through each column
     for col in range(1, max_col + 1):
         # Check if all cells in column are empty starting from row 2
@@ -140,16 +129,16 @@ def create_xlsx(rfc, option):
         except FileExistsError:
             pass
 
-        filename    = f"{option}-{fecha_actual}.xlsx"
-        xlsx_path   = os.path.join(rfc, 'xlsx_report', option, filename)
+        filename        = f"{option}-{fecha_actual}.xlsx"
+        xlsx_path       = os.path.join(rfc, 'xlsx_report', option, filename)
 
         # Create an Excel file and format the header
-        wb          = Workbook()
-        ws          = wb.active
-        ws.title    = f"{option}-{fecha_actual}"
-        header_font = Font(color='FFFFFF')
-        header_fill = PatternFill(
-        start_color ='730707', end_color='730707', fill_type='solid')
+        wb              = Workbook()
+        ws              = wb.active
+        ws.title        = f"{option}-{fecha_actual}"
+        header_font     = Font(color='FFFFFF')
+        header_fill     = PatternFill(
+        start_color     ='730707', end_color='730707', fill_type='solid')
 
         # write headers for version 3.3
         for col_num, name in enumerate(cfdi33, 1):
@@ -169,19 +158,21 @@ def create_xlsx(rfc, option):
         return xlsx_path
 
     except Exception as e:
-        print(f"Error: {e}")
-
+        print(f'{e}')
 
 def cfdi_to_xlsx(rfc, option):
-    #
+    # Create Excel file with headers
     path = create_xlsx(rfc, option)
     rename_xlsx_headers(path)
 
-    #
+    # Load workbook and get active worksheet
     wb = load_workbook(path)
     ws = wb.active
-    headers = [cell.value for cell in ws[1]]
 
+    # Get headers from worksheet
+    headers = [cell.value for cell in ws[1]]
+    
+    # Process each XML file in directory
     for filename in filenames(f"{rfc}{get_dir_path_data(option)}"):
         try:
             tree = ET.parse(filename)
@@ -194,36 +185,46 @@ def cfdi_to_xlsx(rfc, option):
             emisor      = root.find(emisor_query)
             receptor    = root.find(receptor_query)
 
-            if emisor is not None and receptor is not None:
-                row_data = {}
-                for nodo in root.iter():
-                    if nodo.attrib:
-                        for key, value in nodo.attrib.items():
-                            if key in headers:
-                                row_data['Rfc']             = str(emisor.get('Rfc'))
-                                row_data['Rfc receptor']    = str(receptor.get('Rfc'))
-                                row_data['Nombre']          = str(emisor.get('Nombre'))
-                                row_data['Nombre receptor'] = str(receptor.get('Nombre'))
-                                row_data[key]               = value
-                if row_data:
-                    row_num = ws.max_row + 1
-                    for col_num, header in enumerate(headers, 1):
-                        if header in row_data:
-                            if header == 'Total' or header == 'SubTotal' or header == 'TotalImpuestosRetenidos' or header == 'Descuento' or header == 'Importe' or header == 'ValorUnitario' or header == 'Base' or header == 'TasaOCuota':
-                                ws.cell(row=row_num, column=col_num, value=float(row_data[header]))
-                            else:
-                                ws.cell(row=row_num, column=col_num, value=row_data[header])
+            # Create a dictionary to store row data
+            row_data = {}
+
+            # Add other attributes to dictionary
+            for nodo in root.iter():
+                if nodo.attrib:
+                    row_data.update({key: value for key, value in nodo.attrib.items() if key in headers and key not in row_data})
+
+            # Add RFC, Name, and Receiver RFC and Name to dictionary
+            if emisor is not None:
+                row_data['Rfc']             = str(emisor.get('Rfc'))
+                row_data['Nombre']          = str(emisor.get('Nombre'))
+            if receptor is not None:
+                row_data['Rfc receptor']    = str(receptor.get('Rfc'))
+                row_data['Nombre receptor'] = str(receptor.get('Nombre'))
+                
+            # Check if row_data has any data before writing to worksheet
+            if row_data:
+                # Write data to worksheet
+                row_num = ws.max_row + 1
+                for col_num, header in enumerate(headers, 1):
+                    if header in row_data:
+                        cell_value = row_data[header]
+                        # Check if cell value is a number and convert to float if necessary
+                        if isinstance(cell_value, str) and cell_value.isnumeric():
+                            cell_value = float(cell_value)
+                        # Write cell value to worksheet
+                        ws.cell(row=1, column=col_num, value=cell_value)
 
             # saving the values that correspond to each header.
             wb.save(path)
             print(f'{filename} xlsx filled successfully.')
+
         except ET.ParseError:
             print(f"{filename} could not be parsed.")
         except Exception as e:
             print(f"{filename} could not be processed due to an error: {e}.")
 
+    # Delete empty columns from worksheet
     del_empty_columns(path)
-
 
 def xlsx_general_report(rfc):
 
@@ -291,3 +292,5 @@ def xlsx_general_report(rfc):
         nwb.save(f'{rfc}/reporte-general-{fecha_actual}.xlsx')
     except Exception as e:
         print(f'E4: Error saving the new workbook: {e}')
+
+cfdi_to_xlsx('MHS850101F67', 'DES_BON_DEV')
