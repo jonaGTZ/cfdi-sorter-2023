@@ -21,12 +21,6 @@ version_query = 'Version'
 # Gets the current date and time
 fecha_actual  = datetime.now().strftime('%m%d%Y-%H%M%S')
 
-def filenames(dir):
-    for root, dirs, files in os.walk(dir):
-        for file in files:
-            if file.endswith(".xml"):
-                yield os.path.join(root, file)
-
 def get_dir_path_data(option):
     dirs = {
         'AYUDAS'        : '/Emisor/Ayudas/',
@@ -39,20 +33,30 @@ def get_dir_path_data(option):
     }
     return dirs.get(option)
 
+def filenames(dir):
+    for root, dirs, files in os.walk(dir):
+        for file in files:
+            if file.endswith(".xml"):
+                yield os.path.join(root, file)
+
 def rename_xlsx_headers(path):
     # Load workbook and get active worksheet and headers from first row
-    wb      = load_workbook(path)
-    ws      = wb.active
+    wb = load_workbook(path)
+    ws = wb.active
     headers = [cell.value for cell in ws[1]]
     
     # Count the occurrences of each header and rename if necessary
     count = {}
     for i, header in enumerate(headers):
         if header in count:
-            count[header]   += 1
-            headers[i]      = f"{header} receptor"
+            count[header] += 1
+            headers[i] = f"{header} receptor"
         else:
-            count[header]   = 0
+            count[header] = 0
+
+    # Write modified headers back to worksheet
+    for col_num, name in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num, value=name)
 
     # Save modified workbook and print success message
     wb.save(path)
@@ -65,18 +69,17 @@ def get_cfdi_version(version):
     elif version == '3.3':
         emisor_query    = '{http://www.sat.gob.mx/cfd/3}Emisor'
         receptor_query  = '{http://www.sat.gob.mx/cfd/3}Receptor'
-
     return emisor_query, receptor_query
 
 def del_empty_columns(path):
     # Load the workbook
-    wb      = load_workbook(path)
-    ws      = wb.active
+    wb = load_workbook(path)
+    ws = wb.active
 
     # Find the maximum number of rows and columns
     max_row = ws.max_row
     max_col = ws.max_column
-    
+
     # Loop through each column
     for col in range(1, max_col + 1):
         # Check if all cells in column are empty starting from row 2
@@ -92,7 +95,6 @@ def del_empty_columns(path):
     # Save the workbook
     wb.save(path)
     print(f'{path} xlsx deleted columns successfully.')
-
 
 def create_xlsx(rfc, option):
     try:
@@ -158,7 +160,7 @@ def create_xlsx(rfc, option):
         return xlsx_path
 
     except Exception as e:
-        print(f'{e}')
+        print(f"Error: {e}")
 
 def cfdi_to_xlsx(rfc, option):
     # Create Excel file with headers
@@ -181,7 +183,6 @@ def cfdi_to_xlsx(rfc, option):
             # Get the cfdi version
             version     = root.get(version_query)
             emisor_query, receptor_query = get_cfdi_version(version)
-
             emisor      = root.find(emisor_query)
             receptor    = root.find(receptor_query)
 
@@ -200,7 +201,7 @@ def cfdi_to_xlsx(rfc, option):
             if receptor is not None:
                 row_data['Rfc receptor']    = str(receptor.get('Rfc'))
                 row_data['Nombre receptor'] = str(receptor.get('Nombre'))
-                
+
             # Check if row_data has any data before writing to worksheet
             if row_data:
                 # Write data to worksheet
@@ -211,13 +212,13 @@ def cfdi_to_xlsx(rfc, option):
                         # Check if cell value is a number and convert to float if necessary
                         if isinstance(cell_value, str) and cell_value.isnumeric():
                             cell_value = float(cell_value)
+
                         # Write cell value to worksheet
-                        ws.cell(row=1, column=col_num, value=cell_value)
+                        ws.cell(row=row_num, column=col_num, value=cell_value)
 
             # saving the values that correspond to each header.
             wb.save(path)
             print(f'{filename} xlsx filled successfully.')
-
         except ET.ParseError:
             print(f"{filename} could not be parsed.")
         except Exception as e:
