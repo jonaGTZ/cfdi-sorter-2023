@@ -8,9 +8,10 @@
 
 # import necessary modules
 import os
-from cfdi_sorter import cfdi_sorter
-from xlsx_report import cfdi_to_xlsx, xlsx_general_report
-from pdf_report  import generate_pdf
+from cfdi_sorter    import cfdi_sorter
+from xlsx_report    import cfdi_to_xlsx, xlsx_general_report
+from pdf_report     import generate_pdf
+from cfdi_to_xlsx   import cfdi_to_xlsx
 
 # Function to clear the console screen
 def clear():
@@ -22,7 +23,7 @@ def select_type_report(rfc):
                '4': 'DES_BON_DEV', '5': 'GASTOR', '6': 'PAGOS', '7': 'NOMINA'}
 
     while True:
-        #clear()
+        clear()
         print("Menu [3] Select a type report:")
         print('Select an option:')
         print('1. report in excel for receipt type help')
@@ -38,11 +39,13 @@ def select_type_report(rfc):
         opcion = input("\nSelect an option: ")
 
         if options.get(opcion):
-            cfdi_to_xlsx(rfc, options.get(opcion))
+            cfdi_to_xlsx(f'{options.get(opcion)}', rfc)
+            input("Press Enter to return to the main menu...")
         elif opcion == '8':
             xlsx_general_report(rfc)
             input("Press Enter to return to the main menu...")
         elif opcion == '9':
+            #
             input("Press Enter to return to the main menu...")
             break
         else:
@@ -60,7 +63,7 @@ def select_municipality():
         print("5. MTR: MTR93032155L8")
         print("0. Exit")
         opcion = input("\nSelect an option: ")
-        if opcion == '1':
+        if   opcion == '1':
             select_algorithm('MAP850101324')
         elif opcion == '2':
             select_algorithm('MCM8501012U0')
