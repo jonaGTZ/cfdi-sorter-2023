@@ -8,7 +8,7 @@ from datetime   import datetime
 # Gets the current date and time
 now = datetime.now().strftime('%m%d%Y-%H%M%S')
 
-def cfdi_to_xlsx_V1_1(dirpath, rfc):
+def cfdi_to_xlsx(dirpath, rfc):
     # Define the list of columns for the DataFrame
     columnas = ["nombre"] 
 
@@ -45,11 +45,31 @@ def cfdi_to_xlsx_V1_1(dirpath, rfc):
 
     # Create a DataFrame from the list of rows
     df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
+    
+    # Create a ExcelWriter object
+    writer = pd.ExcelWriter(f"{dirpath}/reporte-{now}.xlsx", engine='xlsxwriter')
 
-    # Save the DataFrame to an Excel file
-    df.to_excel(f"{dirpath}/reporte-{now}.xlsx", index=False)
+    # Define the formatting for the header row
+    header_format = writer.book.add_format({'bold': True, 'bg_color': '#730707', 'font_color': 'white'})
+
+    # Convert the DataFrame to an Excel sheet
+    df.to_excel(writer, sheet_name=f'{rfc}', index=False)
+    
+    worksheet = writer.sheets[f'{rfc}']
+
+    # Format the header row
+    for col_num, value in enumerate(df.columns.values):
+        worksheet.write(0, col_num, value, header_format)
+
+    # Set the column widths to auto-fit
+    for i, col in enumerate(df.columns):
+        column_width = max(df[col].astype(str).map(len).max(), len(col))
+        worksheet.set_column(i, i, column_width)
+
+    # Save the Excel file
+    writer.save()
 
 # Main script code
-if __name__ == '__main__':
-    cfdi_to_xlsx_V1_1('MHS850101F67/Receptor/Descuento_Bonificaciones_Devoluciones/', 'MHS850101F67')
-    pass
+# if __name__ == '__main__':
+#     cfdi_to_xlsx('MHS850101F67/Receptor/Descuento_Bonificaciones_Devoluciones/', 'MHS850101F67')
+#     pass

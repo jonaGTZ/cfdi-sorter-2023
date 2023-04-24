@@ -293,5 +293,3 @@ def xlsx_general_report(rfc):
         nwb.save(f'{rfc}/reporte-general-{fecha_actual}.xlsx')
     except Exception as e:
         print(f'E4: Error saving the new workbook: {e}')
-
-cfdi_to_xlsx('MHS850101F67', 'DES_BON_DEV')
