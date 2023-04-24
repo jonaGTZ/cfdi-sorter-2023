@@ -3,14 +3,14 @@ import os
 import pandas as pd
 
 from lxml       import etree
-from datetime   import datetime
+from datetime   import datetime, timedelta
 
 # Gets the current date and time
 now = datetime.now().strftime('%m%d%Y-%H%M%S')
 
-def cfdi_to_xlsx(dirpath, rfc):
+def cfdi_to_xlsx_V1_3(dirpath, rfc):
     # Define the list of columns for the DataFrame
-    columnas = ["nombre"] 
+    columnas = ["Rfc Emisor", "Nombre Emisor"]
 
     # Create an empty list for the rows
     filas = []
@@ -33,13 +33,20 @@ def cfdi_to_xlsx(dirpath, rfc):
                             columnas.append(atributo)
                 
                 # Create a row for the current file
-                fila = {"nombre": filename}
+                fila = {}
                 
                 # Get all attribute values for each node in the file
                 for nodo in arbol.iter():
                     for atributo in nodo.attrib:
                         fila[atributo] = nodo.attrib[atributo]
-                
+
+                        # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" node as new columns
+                        if nodo.tag.endswith('Emisor'):
+                            if 'Rfc' in nodo.attrib:
+                                fila['Rfc Emisor'] = nodo.attrib['Rfc']
+                            if 'Nombre' in nodo.attrib:
+                                fila['Nombre Emisor'] = nodo.attrib['Nombre']
+
                 # Add the row to the list of rows
                 filas.append(fila)
 
@@ -67,9 +74,28 @@ def cfdi_to_xlsx(dirpath, rfc):
         worksheet.set_column(i, i, column_width)
 
     # Save the Excel file
-    writer.save()
+    writer.close()
 
-# Main script code
-# if __name__ == '__main__':
-#     cfdi_to_xlsx('MHS850101F67/Receptor/Descuento_Bonificaciones_Devoluciones/', 'MHS850101F67')
-#     pass
+def remaining_traversal_time(dirpath):
+    file_count = 0
+    for dir, subdir, files in os.walk(dirpath):
+        for file in files:
+            if file.endswith(".xml"):
+                file_count += 1
+
+    # Calculate the average processing time per file (in seconds)
+    avg_time_per_file = 5.0  # <-- replace with actual average processing time
+
+    # Calculate the remaining processing time (in seconds)
+    remaining_time = avg_time_per_file * file_count
+
+    # Format the remaining time as HH:MM:SS
+    remaining_time_str = str(timedelta(seconds=remaining_time))
+
+    return remaining_time_str
+
+
+if __name__ == '__main__':
+    remaining_time_str = remaining_traversal_time('MHS850101F67/Emisor/Nomina/')
+    print(f"Estimated remaining traversal time: {remaining_time_str}")
+    cfdi_to_xlsx_V1_3('MHS850101F67/Emisor/Nomina/', 'MHS850101F67')
