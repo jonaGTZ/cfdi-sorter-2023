@@ -27,16 +27,15 @@ def get_dir_path_data(option, rfc):
 
 def cfdi_to_xlsx(option, rfc):
     # Define the path of cfdi's dir 
-    dirpath = get_dir_path_data(option, rfc)
+    dirpath     = get_dir_path_data(option, rfc)
     
-    # Define the list of columns for the DataFrame
-    columnas = ["Rfc Emisor", "Nombre Emisor"]
+    # Define the list of columns for the DataFrame and an empty list for the rows
+    columnas    = ["Rfc Emisor", "Nombre Emisor"]
+    filas       = []
 
-    # Create an empty list for the rows
-    filas = []
-
+    # prints to the console a prediction of the delay time of the algorithm
     remaining_time = remaining_traversal_time(dirpath)
-    print(f"Estimated remaining traversal time: {remaining_time}")
+    print(f"Estimated remaining time (HH:MM:SS:MS): {remaining_time}")
 
     # Iterate over all XML files in the specified path
     for dir, subdir, files in os.walk(dirpath):
@@ -49,7 +48,7 @@ def cfdi_to_xlsx(option, rfc):
                 try: 
                     arbol = etree.parse(filename)
                 except Exception as e:
-                    print(f'Impossible to parse the tree: {filename}')
+                    print(f'E1: Impossible to parse the tree: {filename}')
                     continue
 
                 # Get all nodes and their attributes
@@ -114,7 +113,7 @@ def remaining_traversal_time(dirpath):
                 file_count += 1
 
     # Calculate the average processing time per file (in seconds)
-    avg_time_per_file = 5.0  # <-- replace with actual average processing time
+    avg_time_per_file = 0.5  # <-- replace with actual average processing time
 
     # Calculate the remaining processing time (in seconds)
     remaining_time = avg_time_per_file * file_count
