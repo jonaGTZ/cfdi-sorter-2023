@@ -1,3 +1,8 @@
+# script header
+# Author:           [Hugo Berra Salazar, ]
+# Creation date:    [04/24/2023]
+# Description:      [Brief description of the purpose of the script]
+
 # import necessary modules
 import os
 import pandas as pd

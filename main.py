@@ -9,7 +9,7 @@
 # import necessary modules
 import os
 from cfdi_sorter    import cfdi_sorter
-from xlsx_report    import cfdi_to_xlsx, xlsx_general_report
+from xlsx_report    import xlsx_general_report
 from pdf_report     import generate_pdf
 from cfdi_to_xlsx   import cfdi_to_xlsx
 
