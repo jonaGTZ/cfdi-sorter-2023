@@ -8,26 +8,16 @@
 
 # pdf build modules
 from reportlab.pdfgen               import canvas
-from reportlab.lib.utils            import ImageReader
-from reportlab.platypus             import Table, TableStyle
 from reportlab.lib.styles           import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib                  import colors
 from reportlab.lib.units            import inch
 from reportlab.lib.pagesizes        import letter
 from reportlab.platypus             import Paragraph
-# qr build modules
-from reportlab.graphics             import renderPDF
-from reportlab.graphics.shapes      import Drawing
-from reportlab.graphics.barcode.qr  import QrCodeWidget
 # directory parser modules
 from xml.dom                        import minidom
 import os
-
-# root directory to parse
-directory = 'MHS850101F67'
-
-# Tandem image path
-image_path = 'tandemlogo.png'
+# local modules
+from amount_with_letter             import amount_with_letter
+from canvas_writer                  import drawline, draw_concept_table, draw_related_table, drawrect, drawtittle, drawsubtittle, drawimage, drawQR
 
 def get_related_cfdi(docs):
     documents = []
@@ -123,227 +113,7 @@ def get_cfdi_concepts_table(receipt, concepts):
     # split column "descripción" text into multiple lines
     for row in table[0:]:
         row[3] = Paragraph(row[3], styledesc)
-    return table
-
-def amount_with_letter(amount):
-    units       = ['', 'UNO', 'DOS', 'TRES', 'CUATRO', 'CINCO', 'SEIS', 'SIETE', 'OCHO', 'NUEVE']
-    tens        = ['', 'DIEZ', 'VEINTE', 'TREINTA', 'CUARENTA', 'CINCUENTA', 'SESENTA', 'SETENTA', 'OCHENTA', 'NOVENTA']
-    specials    = ['ONCE', 'DOCE', 'TRECE', 'CATORCE', 'QUINCE']
-    hundreds    = ['', 'CIENTO ', 'DOSCIENTOS ', 'TRECIENTOS ', 'CUATROCIENTOS ', 'QUINIENTOS ', 'SEISCIENTOS ', 'SETECIENTOS ', 'OCHOCIENTOS ', 'NOVECIENTOS ']
-    thousands   = ['', 'MIL', 'MILLÓN']
-
-    # round to two decimal places
-    amount = round(amount, 2)
-
-    # separate the integer and decimal part
-    entero, decimal = str(amount).split(".")
-    entero = int(entero)
-
-    # convert integer part to letters
-    letters = ""
-    if entero == 0:
-        return 'CERO MN'
-    else:
-        # convert groups of three digits to letters
-        grous = []
-        while entero > 0:
-            grous.append(entero % 1000)
-            entero //= 1000
-
-        for i, grupo in enumerate(grous):
-            if grupo == 0:
-                continue
-
-            group_letters = ""
-            c = grupo // 100
-            if c > 0:
-                if grupo == 100 and i == 0:
-                    group_letters += "CIEN"
-                else:
-                    group_letters += hundreds[c]
-                
-            d = grupo % 100 // 10
-            u = grupo % 10
-            if d == 0:
-                if u > 0:
-                    group_letters += units[u]
-            elif d == 1:
-                if u >= 1 and u <= 5:
-                    group_letters += specials[u - 1]
-                else:
-                    group_letters += tens[d] + " Y " + units[u]
-            else:
-                if u > 0:
-                    group_letters += tens[d] + " Y " + units[u]
-                else:
-                    group_letters += tens[d]
-
-            if i == 1 and grupo == 1:
-                group_letters = " MIL"
-            elif i > 0:
-                if grupo == 1:
-                    group_letters += " " + thousands[i]
-                else:
-                    group_letters += " " + thousands[i] + " "
-
-            letters = group_letters + " " + letters
-
-        # remove leading and trailing spaces
-        letters = letters.strip()
-
-    # add the decimal part in letters
-    if decimal != '0' and '00':
-        letters += " " + decimal + "/100 MN"
-    else:
-        letters += ' 0/100 MN'
-    return letters
-
-""" 
-    preliminary function definition addendum for drawing on the canvas that builds a pdf for each cfdi
-"""
-def drawline(c, x, y, text):
-    c.setFillColorRGB(0, 0, 0)
-    c.setFontSize(9)
-    # Check if the y position exceeds the page height and create a new page if necessary
-    if y < 25:
-        c.showPage()
-        c.setFontSize(9)
-        y = letter[1] - 25
-    c.drawString(x, y, text)
-    return y
-
-def draw_concept_table(c, rows, x, y, cfdi_tipo):
-    # obtain the height of the table | 18' is the size of each row
-    if cfdi_tipo == 'E':
-        limit = len(rows) * 21
-    else:    
-        limit = len(rows) * 18
-
-    data = [['ClaveProdServ', 'Cantidad', 'Unidad Medida', 'Descripción', 'Valor Unitario', 'Impuestos', 'Importe']]
-
-    # algorithm to lay the table in the PDF respectively at its height
-    if y <= 25:
-        c.showPage()
-        y = letter[1] - 25
-    else: 
-        while limit > 0 and y > 25:
-            if rows:
-                data.append(rows.pop(0))
-            if cfdi_tipo == 'E':
-                y -= 21
-                limit -= 21
-            else:
-                y -= 18
-                limit -= 18
-            
-    # generate size and style of concept table
-    table = Table(data, colWidths=[75, 45, 60, 200, 70, 75, 65])
-    table.setStyle(TableStyle([
-        ('FONTNAME'  , (0,0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE'  , (0,0), (-1, 0), 8),
-        ('BACKGROUND', (0,0), (-1, 0), colors.Color(0.447, 0.027, 0.027)),
-        ('TEXTCOLOR' , (0,0), (-1, 0), colors.white),
-        ('ALIGN'     , (0,0), (-1,-1), 'CENTER'),
-        ('ALIGN'     , (4,1), ( 4,-1), 'RIGHT'),
-        ('ALIGN'     , (5,1), ( 5,-1), 'RIGHT'),
-        ('ALIGN'     , (6,1), ( 6,-1), 'RIGHT'),
-    ]))
-
-    if table._nrows > 1:
-        table.wrapOn(c, inch, inch)
-        table.drawOn(c, x, y)
-
-    if rows:
-        y = draw_concept_table(c, rows, x, y, cfdi_tipo)
-    return y
-
-def draw_related_table(c, rows, x, y):
-    
-    # obtain the height of the table | 18' is the size of each row (needs adjustment) 
-    limit = len(rows) * 18
-    data = [['IdDocumento', 'Serie', 'Folio', 'ImpSaldoAnt', 'ImpPagado'],]
-
-    # algorithm to lay the table in the PDF respectively at its height
-    if y <= 25:
-        c.showPage()
-        y = letter[1] - 25
-    else: 
-        while limit > 0 and y > 25:
-            if rows:
-                data.append(rows.pop(0))
-            y -= 18
-            limit -= 18
-    
-    # generate size and style of concept table
-    table = Table(data, colWidths=[260, 70, 70, 95, 95])
-    table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.Color(0.447, 0.027, 0.027)),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-            ('ALIGN', (0,0), (0,-1), 'CENTER'),
-            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0,0), (-1,0), 8)
-    ]))
-    table.wrapOn(c, inch, inch)
-    table.drawOn(c, x, y)
-    if rows:
-        y = draw_related_table(c, rows, x, y)
-    return y
-
-def drawrect(c, x, y, w, h, f, s): 
-    c.setFillColorRGB(0.447, 0.027, 0.027)    
-    if y < 25:
-        c.showPage()
-        c.setFillColorRGB(0.447, 0.027, 0.027)
-        y = letter[1] - 25
-        y -= h
-    c.rect(x, y, w, h, fill=f, stroke=s)
-    return y
-
-def drawtittle(c, x, y, text):
-    c.setFillColorRGB( 1, 1, 1)
-    c.setFontSize(12)
-    # Check if the y position exceeds the page height and create a new page if necessary
-    if y < 25:
-        c.showPage()
-        y = letter[1] - 25
-    c.drawString(x, y, text)
-    return y - 18
-
-def drawsubtittle(c, x, y, text):
-    c.setFillColorRGB( 1, 1, 1)
-    c.setFontSize(7)
-    # Check if the y position exceeds the page height and create a new page if necessary
-    if y < 25:
-        c.showPage()
-        y = letter[1] - 25
-    c.drawString(x, y, text)
-    return y - 18
-
-def drawimage(c, x, y):
-    logo = ImageReader(image_path)
-    logo_width, logo_height = logo.getSize()
-    y -= (logo_height / 7.5)
-    c.drawImage(logo, x, y, logo_width/7.5, logo_height/7.5)
-    return y - 24
-
-def drawQR(c, x, y, url):
-    # create a QR code widget with the qrcode library
-    qr_code = QrCodeWidget(url)
-    bounds = qr_code.getBounds()
-    # calculate the scale needed for the QR code to
-    width, height = 170, 170
-    x_scale = width / (bounds[2] - bounds[0])
-    y_scale = height / (bounds[3] - bounds[1])
-    d = Drawing(width, height, transform=[x_scale, 0, 0, y_scale, -bounds[0] * x_scale, -bounds[1] * y_scale])
-    d.add(qr_code)
-    if y < 25:
-        c.showPage()
-        y = letter[1] - 25
-        y -= 150
-    # draw the QR code on the PDF file
-    renderPDF.draw(d, c, x, y)
-    return y 
+    return table 
 
 def canvas_pdf_parser(xml_file, pdf_file):
     # read the XML file using the minidom module
@@ -582,11 +352,11 @@ def filenames(directory):
 
 def generate_pdf(rfc):
     dir = f'{rfc}/Reportes PDF'
-    # create the main folder "RFC_Municipio" if it does not exist
+    # create the main folder "Reportes PDF" if it does not exist
     if not os.path.exists(dir):
         os.makedirs(dir)
 
-    for filename in filenames(directory):
+    for filename in filenames(rfc):
         # get the path of the directory containing the xml file
         xml_dir = os.path.dirname(filename)
         # create the same subdirectory structure in the "RFC_Municipio" folder
