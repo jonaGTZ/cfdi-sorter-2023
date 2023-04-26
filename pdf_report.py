@@ -20,9 +20,9 @@ from reportlab.platypus        import Paragraph
 from xml.dom                   import minidom
 import os
 
-def canvas_pdf_parser(xml_file, pdf_file):
+def canvas_pdf_parser(filename, pdfname):
     # read the XML file using the minidom module
-    cfdi = minidom.parse(xml_file)
+    cfdi = minidom.parse(filename)
     
     # get cfdi nodes to build pdf with required data
     cfdi_comprobante_node        = cfdi.getElementsByTagName('cfdi:Comprobante')
@@ -49,7 +49,7 @@ def canvas_pdf_parser(xml_file, pdf_file):
     else: return
     
     # create the canvas object where to layout the cfdi data
-    c = canvas.Canvas(pdf_file, pagesize=letter)
+    c = canvas.Canvas(pdfname, pagesize=letter)
     c.setFontSize(9)
     
     # define the start size and position of canva
@@ -234,7 +234,12 @@ def canvas_pdf_parser(xml_file, pdf_file):
     sello_sat.drawOn(c, x+10, y)
 
     # save canvas to pdf
-    c.save()
+    try:
+        c.save()
+        print(f'{pdfname}: Saved')
+    except Exception as e:
+        print(f'E1: Impossible to save the PFD: {pdfname}')
+        pass
 
 def getSELLO(comprobante):
     if comprobante:
@@ -270,10 +275,9 @@ def generate_pdf(rfc):
             os.makedirs(pdf_dir)
         # generate the pdf file inside the corresponding folder
         pdf_file = os.path.join(pdf_dir, os.path.basename(filename).replace('.xml', '.pdf'))
-        canvas_pdf_parser(filename, pdf_file)
-
-# Main script code
-if __name__ == '__main__':
-    # Code that is executed when the script is called directly
-    generate_pdf('CFDI_RFC_MUNICIPIO')
-    pass
+        try: 
+            canvas_pdf_parser(filename, pdf_file)
+        except Exception as e:
+            print(f'E1: Impossible to parse the tree: {filename}')
+            continue
+        
