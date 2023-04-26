@@ -51,11 +51,13 @@ def cfdi_sorter(rfc, directory):
             tree = etree.parse(filename)
             root = tree.getroot()
             
+            # searches the "cfdi:Comprobante" node for the attributes that build the classification
             if root.tag.endswith('Comprobante'):
                 tipo        = root.get('TipoDeComprobante')
                 metodo_pago = root.get('MetodoPago')
                 version     = root.get('Version')
 
+            # Gets the RFC of the sender and receiver to whom the classification algorithm applies
             emisor_query, receptor_query = get_cfdi_version(version)
             emisor      = root.find(f'.//{emisor_query}').get('Rfc')
             receptor    = root.find(f'.//{receptor_query}').get('Rfc')
@@ -64,10 +66,10 @@ def cfdi_sorter(rfc, directory):
             if emisor is None or receptor is None or tipo is None:
                 print(f"{filename} : E2: does not meet the requirements of the CFDI sorter standard.")
                 try:
-                    os.makedirs(os.path.join(rfc, err_directory, filename))
+                    os.makedirs(os.path.join(rfc, err_directory))
+                    shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
                 except FileExistsError :
                     continue
-
 
             # Check if the value of metodo_pago is valid
             if metodo_pago not in ['PUE', 'PPD']:
@@ -95,7 +97,8 @@ def cfdi_sorter(rfc, directory):
             else:
                 print(f"E3: {filename} does not belong to any of the classifier folders.")
                 try:
-                    os.makedirs(os.path.join(rfc, err_directory, filename))
+                    os.makedirs(os.path.join(rfc, err_directory))
+                    shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
                 except FileExistsError :
                     continue
 
