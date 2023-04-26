@@ -7,14 +7,11 @@
 # Description:      [list of specific functions to chart a CFDI in PDF format]
 
 # pdf build modules
-from reportlab.pdfgen               import canvas
 from reportlab.lib.utils            import ImageReader
 from reportlab.platypus             import Table, TableStyle
-from reportlab.lib.styles           import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib                  import colors
 from reportlab.lib.units            import inch
 from reportlab.lib.pagesizes        import letter
-from reportlab.platypus             import Paragraph
 # qr build modules
 from reportlab.graphics             import renderPDF
 from reportlab.graphics.shapes      import Drawing
