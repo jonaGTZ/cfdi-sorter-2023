@@ -366,3 +366,9 @@ def generate_pdf(rfc):
         # generate the pdf file inside the corresponding folder
         pdf_file = os.path.join(pdf_dir, os.path.basename(filename).replace('.xml', '.pdf'))
         canvas_pdf_parser(filename, pdf_file)
+
+# Main script code
+if __name__ == '__main__':
+    # Code that is executed when the script is called directly
+    generate_pdf('CFDI_RFC_MUNICIPIO')
+    pass
