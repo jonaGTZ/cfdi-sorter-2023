@@ -1,9 +1,8 @@
 #BORRAR
 prueba.py
-script_01_sorterFiles.py
-script_03_xmlToPdf.py
 tandemlogo.png
-
+CFDI_RFC_MUNICIPIO
+new_xml_data/
 
 #skip dir
 Clientes/
@@ -13,7 +12,6 @@ MHS850101F67/
 MOP850101NX1/
 MTR9302155L8/
 .vscode/
-xml_new_data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
