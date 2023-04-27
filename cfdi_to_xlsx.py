@@ -17,11 +17,11 @@ def get_dir_path_data(option, rfc):
     dirs = {
         'AYUDAS'        : f'{rfc}/Emisor/Ayudas/',
         'INGRESO'       : f'{rfc}/Emisor/Ingresos/',
-        'GASTOE'        : f'{rfc}/Emisor/Gastos/',
         'NOMINA'        : f'{rfc}/Emisor/Nomina/',
+        'PAGO_E'        : f'{rfc}/Emisor/Pagos/',
         'DES_BON_DEV'   : f'{rfc}/Receptor/Descuento_Bonificaciones_Devoluciones/',
-        'GASTOR'        : f'{rfc}/Receptor/Gastos/',
-        'PAGOS'         : f'{rfc}/Receptor/Pagos/'
+        'GASTO'         : f'{rfc}/Receptor/Gastos/',
+        'PAGO_R'        : f'{rfc}/Receptor/Pagos/'
     }
     return dirs.get(option)
 
@@ -30,7 +30,7 @@ def cfdi_to_xlsx(option, rfc):
     dirpath     = get_dir_path_data(option, rfc)
     
     # Define the list of columns for the DataFrame and an empty list for the rows
-    columnas    = ["Rfc Emisor", "Nombre Emisor"]
+    columnas    = ["Rfc Emisor", "Nombre Emisor", "CFDI VERSION"]
     filas       = []
 
     # prints to the console a prediction of the delay time of the algorithm
@@ -65,8 +65,13 @@ def cfdi_to_xlsx(option, rfc):
                 for nodo in arbol.iter():
                     for atributo in nodo.attrib:
                         fila[atributo] = nodo.attrib[atributo]
+                        
+                        # Add "Version" attribute of "cfdi:Comprobante" node as new column
+                        if nodo.tag.endswith('Comprobante'):
+                            if 'Version' in nodo.attrib:
+                                fila['CFDI VERSION'] = nodo.attrib['Version']
 
-                        # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" node as new columns
+                        # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" and "cfdi:Emisor" node as new columns
                         if nodo.tag.endswith('Emisor'):
                             if 'Rfc' in nodo.attrib:
                                 fila['Rfc Emisor'] = nodo.attrib['Rfc']
