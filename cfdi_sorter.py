@@ -64,12 +64,7 @@ def cfdi_sorter(rfc, directory):
 
             # Check if emisor, receptor, tipo, and metodo_pago are not None
             if emisor is None or receptor is None or tipo is None:
-                print(f"{filename} : E2: does not meet the requirements of the CFDI sorter standard.")
-                try:
-                    os.makedirs(os.path.join(rfc, err_directory))
-                    shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
-                except FileExistsError :
-                    continue
+                raise Exception(f"E2: {filename} does not meet the requirements of the CFDI sorter standard.")
 
             # Check if the value of metodo_pago is valid
             if metodo_pago not in ['PUE', 'PPD']:
@@ -95,12 +90,7 @@ def cfdi_sorter(rfc, directory):
             elif tipo == 'P' and receptor    == rfc:
                 subdirectory = pagosR_directory
             else:
-                print(f"E3: {filename} does not belong to any of the classifier folders.")
-                try:
-                    os.makedirs(os.path.join(rfc, err_directory))
-                    shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
-                except FileExistsError :
-                    continue
+                raise Exception(f"E4: {filename} does not belong to any of the classifier folders.")
 
             # Create the sub-subdirectory inside the appropriate subdirectory
             sub_subdirectory = os.path.join(emisor_directory, subdirectory, metodo_pago) if emisor == rfc else os.path.join(receptor_directory, subdirectory, metodo_pago)
@@ -112,7 +102,11 @@ def cfdi_sorter(rfc, directory):
             # Copy the XML file to the appropriate sub-subdirectory
             shutil.copy(filename, os.path.join(rfc, sub_subdirectory, os.path.basename(filename)))
 
-        except etree.ParseError:
-            print(f"E1: {filename} could not be parsed.")
         except Exception as e:
-            print(f"E1: {filename} could not be processed due to an error: {e}.")
+            print(f"E1: {filename} could not be processed due to an error: \n{e}.")
+            try:
+                os.makedirs(os.path.join(rfc, err_directory))
+            except FileExistsError :
+                pass
+            shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
+            continue
