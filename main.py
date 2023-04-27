@@ -19,8 +19,8 @@ def clear():
 
 def select_type_report(rfc):
 
-    options = {'1': 'AYUDAS', '2': 'INGRESO', '3': 'GASTOE',
-               '4': 'DES_BON_DEV', '5': 'GASTOR', '6': 'PAGOS', '7': 'NOMINA'}
+    options = {'1': 'AYUDAS', '2': 'INGRESO', '3': 'NOMINA',
+               '4': 'PAGO_E', '5': 'DES_BON_DEV', '6': 'GASTO', '7': 'PAGO_R'}
 
     while True:
         clear()
@@ -28,11 +28,11 @@ def select_type_report(rfc):
         print('Select an option:')
         print('1. report in excel for receipt type help')
         print('2. report in excel for receipt type income')
-        print('3. report in excel for receipt type issuer/expense')
-        print('4. report in excel for receipt type discounts bonuses returns')
-        print('5. report in excel for receipt type receiver/expense')
-        print('6. report in excel for receipt type pay')
-        print('7. report in excel for receipt type payroll')
+        print('3. report in excel for receipt type payroll')
+        print('4. report in excel for receipt type issuer/pay')
+        print('5. report in excel for receipt type discounts bonuses returns')
+        print('6. report in excel for receipt type expense')
+        print('7. report in excel for receipt type receiver/pay')
         print('8. report in excel to receive all types')
         print('9. Return to previous menu')
 

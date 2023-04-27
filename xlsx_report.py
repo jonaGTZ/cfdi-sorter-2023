@@ -23,7 +23,7 @@ def xlsx_general_report(rfc):
     directories = [
         f'{rfc}/Emisor/Ayudas/',
         f'{rfc}/Emisor/Ingresos/',
-        f'{rfc}/Emisor/Gastos/',
+        f'{rfc}/Emisor/Pagos/',
         f'{rfc}/Emisor/Nomina/',
         f'{rfc}/Receptor/Descuento_Bonificaciones_Devoluciones/',
         f'{rfc}/Receptor/Gastos',
