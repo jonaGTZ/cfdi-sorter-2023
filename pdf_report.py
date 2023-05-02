@@ -33,6 +33,7 @@ def canvas_pdf_parser(filename, pdfname):
     cfdi_nomina_receptor_node    = cfdi.getElementsByTagName('nomina12:Receptor')
     cfdi_timbre_node             = cfdi.getElementsByTagName('tfd:TimbreFiscalDigital')
 
+    # 
     if cfdi_comprobante_node[0].getAttribute('Version') == '4.0':
         cfdi_related_node   = cfdi.getElementsByTagName('pago20:Pago')
         row_related_node    = 'pago20:DoctoRelacionado'
@@ -111,13 +112,15 @@ def canvas_pdf_parser(filename, pdfname):
         y = drawline(c, x + 390, y, cfdi_nomina_receptor_node[0].getAttribute('PeriodicidadPago'))-12
         y = drawline(c, x +  40, y, 'Domicilio Fiscal:')
         y = drawline(c, x + 130, y, cfdi_comprobante_node[0].getAttribute('LugarExpedicion'))
+        
         # remove decimals from the number of days paid
         dias_pagados = cfdi_nomina_node[0].getAttribute('NumDiasPagados')
         try:
-            dias_pagados = float(dias_pagados)
+            dias_pagados    = float(dias_pagados)
             dias_trabajados = int(dias_pagados)
         except ValueError:
             pass
+
         # you can then use the days_worked variable in your code as needed
         y = drawline(c, x + 300, y, 'Días Trabajados:')
         y = drawline(c, x + 390, y, str(dias_trabajados))-12
@@ -200,6 +203,7 @@ def canvas_pdf_parser(filename, pdfname):
 
     # draw the invoice or payroll concepts after generating the array that contains the table
     concepts_rows = get_cfdi_concepts_table(cfdi_comprobante_node, cfdi_conceptos_node)
+    
     # draw the table at position (x, y)
     y = draw_concept_table(c, concepts_rows, x, y-12, cfdi_tipo)
     y = drawrect(c, x, y-12, 590, 1, True, 0)-12
@@ -207,15 +211,16 @@ def canvas_pdf_parser(filename, pdfname):
     # totals table annex, quantity segment with letter, currency and digital stamps
     y = drawline(c, x, y, 'Cantidad con Letra:')
     y = drawline(c, x + 80, y, amount_with_letter(float(cfdi_comprobante_node[0].getAttribute('Total'))))-12
+    
     # defines the link to the verification web page
-    uuid    = getUUID(cfdi_timbre_node)
-    sello   = getSELLO(cfdi_comprobante_node)
-    url = 'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?&id=' + uuid + '&re=' + cfdi_emisor_node[0].getAttribute('Rfc') + '&rr=' + cfdi_receptor_node[0].getAttribute('Rfc') + '&tt=' + cfdi_comprobante_node[0].getAttribute('Total') + '&fe=' + sello
-    y = drawQR(c, x + 430, y - 150, url) + 150  # 150 defines de heigth position its a standart for the size for this canvas
-    y = drawline(c, x, y, 'Moneda:')
-    y = drawline(c, x + 40, y, cfdi_comprobante_node[0].getAttribute('Moneda'))-12
-    y = drawline(c, x, y, 'No de Serie del Certificado del SAT:')
-    y = drawline(c, x + 150, y, cfdi_comprobante_node[0].getAttribute('NoCertificado'))-12
+    url = 'https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?&id=' + getUUID(cfdi_timbre_node) + '&re=' + cfdi_emisor_node[0].getAttribute('Rfc') + '&rr=' + cfdi_receptor_node[0].getAttribute('Rfc') + '&tt=' + cfdi_comprobante_node[0].getAttribute('Total') + '&fe=' + getSELLO(cfdi_comprobante_node)
+    
+    # 
+    y =   drawQR(c, x + 430, y - 150, url) + 150  # 150 defines de heigth position its a standart for the size for this canvas
+    y = drawline(c, x      , y      , 'Moneda:')
+    y = drawline(c, x +  40, y      , cfdi_comprobante_node[0].getAttribute('Moneda'))-12
+    y = drawline(c, x      , y      , 'No de Serie del Certificado del SAT:')
+    y = drawline(c, x + 150, y      , cfdi_comprobante_node[0].getAttribute('NoCertificado'))-12
     
     # segment that converts the Digital Stamps with paragraph style
     style_digitalstamp  = ParagraphStyle(name='CustomStyle', fontSize=6, leading=6)
@@ -280,4 +285,9 @@ def generate_pdf(rfc):
         except Exception as e:
             print(f'E1: Impossible to parse the tree: {filename}')
             continue
-        
+
+# Main script code
+if __name__ == '__main__':
+    # Code that is executed when the script is called directly
+    generate_pdf('MCM8501012U0')
+    pass
