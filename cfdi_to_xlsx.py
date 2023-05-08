@@ -6,6 +6,7 @@
 # import necessary modules
 import os
 import pandas as pd
+import json
 
 from lxml           import etree
 from datetime           import datetime, timedelta
@@ -34,65 +35,70 @@ def get_dir_path_data(option, rfc):
     }
     return dirs.get(option)
 
-def cfdi_to_xlsx(option, rfc):
+def cfdi_to_dict(option, rfc):
     # Define the path of cfdi's dir 
     dirpath     = get_dir_path_data(option, rfc)
     
-    # Define the list of columns for the DataFrame and an empty list for the rows
-    columnas    = ["Rfc Emisor", "Nombre Emisor", "CFDI VERSION", 'Lista de Conceptos']
     filas       = []
 
-    # # prints to the console a prediction of the delay time of the algorithm
-    # remaining_time = remaining_traversal_time(dirpath)
-    # print(f"Estimated remaining time (HH:MM:SS:MS): {remaining_time}")
+    try:
+        # Iterate over all XML files in the specified path
+        for dir, subdir, files in os.walk(dirpath):
+            for file in files:
+                if file.endswith(".xml"):
+                    # Get the full path of the XML file
+                    filename = os.path.join(dir, file)
+                
+                    # Parse the XML file with lxml
+                    try: 
+                        arbol = etree.parse(filename)
+                    except:
+                        raise Exception(f'E1: Impossible to parse the tree: {filename}')
+                    
+                    # Create a columns for the current file
+                    try:
+                        if option == "NOMINA":
+                            with open('payroll-columns.json', encoding='utf-8') as f:
+                                fila = json.load(f)
+                        else:
+                            with open('cfdi-colums.json', encoding='utf-8') as f:
+                                fila = json.load(f)        
+                    except:
+                        raise Exception(f'E2: Impossible to get xlsx columns: {option}')
+                    
+                    # Get all attribute values for each node in the file
+                    for nodo in arbol.iter():
+                        # for atributo in nodo.attrib:
+                        #     fila[atributo] = nodo.attrib[atributo]
 
-    # Iterate over all XML files in the specified path
-    for dir, subdir, files in os.walk(dirpath):
-        for file in files:
-            if file.endswith(".xml"):
-                # Get the full path of the XML file
-                filename = os.path.join(dir, file)
-            
-                # Parse the XML file with lxml
-                try: 
-                    arbol = etree.parse(filename)
-                except Exception as e:
-                    print(f'E1: Impossible to parse the tree: {filename}')
-                    continue
-                
-                # Get all nodes and their attributes
-                for nodo in arbol.iter():
-                    for atributo in nodo.attrib:
-                        # Add each unique attribute as a column of the DataFrame
-                        if atributo not in columnas:
-                            columnas.append(atributo)
-                
-                # Create a row for the current file
-                fila = {}
-                
-                # Get all attribute values for each node in the file
-                for nodo in arbol.iter():
-                    for atributo in nodo.attrib:
-                        fila[atributo] = nodo.attrib[atributo]
+                        # Add "Version" attribute of "cfdi:Comprobante" node as new column
+                        if nodo.tag.endswith('Comprobante'):
+                            fila['Version'] = nodo.attrib['Version']
 
-                    # Add "Version" attribute of "cfdi:Comprobante" node as new column
-                    if nodo.tag.endswith('Comprobante'):
-                        if 'Version' in nodo.attrib:
-                            fila['CFDI VERSION'] = nodo.attrib['Version']
-                    # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" and "cfdi:Emisor" node as new columns
-                    if nodo.tag.endswith('Emisor'):
-                        if 'Rfc' in nodo.attrib:
-                            fila['Rfc Emisor'] = nodo.attrib['Rfc']
-                        if 'Nombre' in nodo.attrib:
+                        # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" and "cfdi:Emisor" node as new columns
+                        if nodo.tag.endswith('Emisor'):
+                            fila['RFC Emisor'] = nodo.attrib['Rfc']
                             fila['Nombre Emisor'] = nodo.attrib['Nombre']
-                            
-                # creates a list of the concepts and inserts them in the column "List of Concepts"
-                conceptos = get_concepts(filename)
-                fila['Lista de Conceptos'] = str(conceptos)
+                                
+                    # creates a list of the concepts and inserts them in the column "List of Concepts"
+                    #conceptos = get_concepts(filename)
+                    #fila['Lista de Conceptos'] = str(conceptos)
 
-                # Add the row to the list of rows
-                filas.append(fila)
-                
+                    # Add the row to the list of rows
+                    filas.append(fila)
+                    break
+
+        return filas, dirpath
+    
+    except Exception as e:
+        print(f'{e}')
+        pass
+
+def dict_to_xlsx(option, rfc):
+
+    filas, dirpath = cfdi_to_dict(option, rfc)
+    print (filas)
+    return
     try:
         # Create a DataFrame from the list of rows
         df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
@@ -123,20 +129,8 @@ def cfdi_to_xlsx(option, rfc):
         print(f'E2: {e}')
         pass
 
-def remaining_traversal_time(dirpath):
-    file_count = 0
-    for dir, subdir, files in os.walk(dirpath):
-        for file in files:
-            if file.endswith(".xml"):
-                file_count += 1
-
-    # Calculate the average processing time per file (in seconds)
-    avg_time_per_file = 0.5  # <-- replace with actual average processing time
-
-    # Calculate the remaining processing time (in seconds)
-    remaining_time = avg_time_per_file * file_count
-
-    # Format the remaining time as HH:MM:SS
-    remaining_time_str = str(timedelta(seconds=remaining_time))
-
-    return remaining_time_str
+# Main script code
+if __name__ == '__main__':
+    # Code that is executed when the script is called directly
+    dict_to_xlsx('PAGO_R', 'MAP850101324')
+    pass
