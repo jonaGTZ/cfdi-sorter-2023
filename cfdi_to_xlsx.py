@@ -7,11 +7,20 @@
 import os
 import pandas as pd
 
-from lxml       import etree
-from datetime   import datetime, timedelta
+from lxml           import etree
+from datetime           import datetime, timedelta
+from xml.dom            import minidom
+from list_table_builder import get_cfdi_concepts
 
 # Gets the current date and time
 now = datetime.now().strftime('%m%d%Y-%H%M%S')
+
+def get_concepts(filename):
+    cfdi = minidom.parse(filename)
+    # get cfdi nodes to build pdf with required data
+    cfdi_conceptos_node   = cfdi.getElementsByTagName('cfdi:Conceptos')[0]
+    concepts_rows = get_cfdi_concepts(cfdi_conceptos_node.getElementsByTagName('cfdi:Concepto'))
+    return concepts_rows
 
 def get_dir_path_data(option, rfc):
     dirs = {
@@ -30,12 +39,12 @@ def cfdi_to_xlsx(option, rfc):
     dirpath     = get_dir_path_data(option, rfc)
     
     # Define the list of columns for the DataFrame and an empty list for the rows
-    columnas    = ["Rfc Emisor", "Nombre Emisor", "CFDI VERSION"]
+    columnas    = ["Rfc Emisor", "Nombre Emisor", "CFDI VERSION", 'Lista de Conceptos']
     filas       = []
 
-    # prints to the console a prediction of the delay time of the algorithm
-    remaining_time = remaining_traversal_time(dirpath)
-    print(f"Estimated remaining time (HH:MM:SS:MS): {remaining_time}")
+    # # prints to the console a prediction of the delay time of the algorithm
+    # remaining_time = remaining_traversal_time(dirpath)
+    # print(f"Estimated remaining time (HH:MM:SS:MS): {remaining_time}")
 
     # Iterate over all XML files in the specified path
     for dir, subdir, files in os.walk(dirpath):
@@ -43,14 +52,14 @@ def cfdi_to_xlsx(option, rfc):
             if file.endswith(".xml"):
                 # Get the full path of the XML file
                 filename = os.path.join(dir, file)
-                
+            
                 # Parse the XML file with lxml
                 try: 
                     arbol = etree.parse(filename)
                 except Exception as e:
                     print(f'E1: Impossible to parse the tree: {filename}')
                     continue
-
+                
                 # Get all nodes and their attributes
                 for nodo in arbol.iter():
                     for atributo in nodo.attrib:
@@ -65,25 +74,29 @@ def cfdi_to_xlsx(option, rfc):
                 for nodo in arbol.iter():
                     for atributo in nodo.attrib:
                         fila[atributo] = nodo.attrib[atributo]
-                        
-                        # Add "Version" attribute of "cfdi:Comprobante" node as new column
-                        if nodo.tag.endswith('Comprobante'):
-                            if 'Version' in nodo.attrib:
-                                fila['CFDI VERSION'] = nodo.attrib['Version']
 
-                        # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" and "cfdi:Emisor" node as new columns
-                        if nodo.tag.endswith('Emisor'):
-                            if 'Rfc' in nodo.attrib:
-                                fila['Rfc Emisor'] = nodo.attrib['Rfc']
-                            if 'Nombre' in nodo.attrib:
-                                fila['Nombre Emisor'] = nodo.attrib['Nombre']
+                    # Add "Version" attribute of "cfdi:Comprobante" node as new column
+                    if nodo.tag.endswith('Comprobante'):
+                        if 'Version' in nodo.attrib:
+                            fila['CFDI VERSION'] = nodo.attrib['Version']
+                    # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" and "cfdi:Emisor" node as new columns
+                    if nodo.tag.endswith('Emisor'):
+                        if 'Rfc' in nodo.attrib:
+                            fila['Rfc Emisor'] = nodo.attrib['Rfc']
+                        if 'Nombre' in nodo.attrib:
+                            fila['Nombre Emisor'] = nodo.attrib['Nombre']
+                            
+                # creates a list of the concepts and inserts them in the column "List of Concepts"
+                conceptos = get_concepts(filename)
+                fila['Lista de Conceptos'] = str(conceptos)
 
                 # Add the row to the list of rows
                 filas.append(fila)
+                
     try:
         # Create a DataFrame from the list of rows
         df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
-        
+
         # Create a ExcelWriter object
         writer = pd.ExcelWriter(f"{dirpath}/{now}-{option}.xlsx", engine='xlsxwriter')
 
@@ -108,7 +121,7 @@ def cfdi_to_xlsx(option, rfc):
         writer.close()
     except Exception as e:
         print(f'E2: {e}')
-    
+        pass
 
 def remaining_traversal_time(dirpath):
     file_count = 0

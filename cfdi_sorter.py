@@ -27,13 +27,15 @@ pagosR_directory        = 'Pagos'
 
 def get_cfdi_version(version):
     if   version == '4.0':
+        comp_query      = '{http://www.sat.gob.mx/cfd/4}Complemento'
         emisor_query    = '{http://www.sat.gob.mx/cfd/4}Emisor'
         receptor_query  = '{http://www.sat.gob.mx/cfd/4}Receptor'
     elif version == '3.3':
+        comp_query      = '{http://www.sat.gob.mx/cfd/3}Complemento'
         emisor_query    = '{http://www.sat.gob.mx/cfd/3}Emisor'
         receptor_query  = '{http://www.sat.gob.mx/cfd/3}Receptor'
 
-    return emisor_query, receptor_query
+    return emisor_query, receptor_query, comp_query
 
 def filenames(directory):
     for root, dirs, files in os.walk(directory):
@@ -43,6 +45,8 @@ def filenames(directory):
                 yield os.path.join(root, file)
 
 def cfdi_sorter(rfc, directory):
+    # Initialize the set to store the UUIDs
+    uuids_set = set()
 
     # Calls the function "filenames" Iterating over each XML file in the directory
     for filename in filenames(directory):
@@ -56,9 +60,19 @@ def cfdi_sorter(rfc, directory):
                 tipo        = root.get('TipoDeComprobante')
                 metodo_pago = root.get('MetodoPago')
                 version     = root.get('Version')
+            
+            emisor_query, receptor_query, complemento_query = get_cfdi_version(version)
+
+            uuid = root.find(f'.//{complemento_query}').find('{http://www.sat.gob.mx/TimbreFiscalDigital}TimbreFiscalDigital').get('UUID')
+
+            # Check if the UUID is already in the set
+            if uuid in uuids_set:
+                raise Exception(f"E1: {uuid} already exists.")
+
+            # Add the UUID to the set
+            uuids_set.add(uuid)
 
             # Gets the RFC of the sender and receiver to whom the classification algorithm applies
-            emisor_query, receptor_query = get_cfdi_version(version)
             emisor      = root.find(f'.//{emisor_query}').get('Rfc')
             receptor    = root.find(f'.//{receptor_query}').get('Rfc')
 
@@ -103,7 +117,7 @@ def cfdi_sorter(rfc, directory):
             shutil.copy(filename, os.path.join(rfc, sub_subdirectory, os.path.basename(filename)))
 
         except Exception as e:
-            print(f"E1: {filename} could not be processed due to an error: \n{e}.")
+            print(f"{e}")
             try:
                 os.makedirs(os.path.join(rfc, err_directory))
             except FileExistsError :
