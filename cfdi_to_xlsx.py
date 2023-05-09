@@ -35,6 +35,39 @@ def get_dir_path_data(option, rfc):
     }
     return dirs.get(option)
 
+def add_row(nodo, fila):
+    # Add "Version" attribute of "cfdi:Comprobante" node as new column
+    if nodo.tag.endswith('Comprobante'):
+        if 'Serie' in nodo.attrib: fila['Serie'] = nodo.attrib['Serie']
+        fila['Version']         = nodo.attrib['Version']
+        fila['Fecha Emision']   = nodo.attrib['Fecha']
+        fila['Folio']           = nodo.attrib['Folio']
+        fila['Tipo Comprobante']= nodo.attrib['TipoDeComprobante']
+        fila['Tipo']            = nodo.attrib['TipoDeComprobante'] # crear TipoDeComprobante con letra
+        # 
+        if nodo.attrib['TipoDeComprobante'] == 'P':
+            fila['Metodo Pago'] = 'N/A'
+            fila['Forma Pago']  = 'N/A'
+        else:
+            fila['Metodo Pago'] = nodo.attrib['MetodoPago']
+            fila['Forma Pago']  = nodo.attrib['FormaPago']
+
+    # Add "cfdi:Emisor" attribs as new row
+    if nodo.tag.endswith('Emisor'):
+        fila['RFC Emisor']      = nodo.attrib['Rfc']
+        fila['Nombre Emisor']   = nodo.attrib['Nombre']
+
+    # Add "cfdi:Receptor" attribs as new row
+    if nodo.tag.endswith('Receptor'):
+        fila['RFC Receptor']    = nodo.attrib['Rfc']
+        fila['Nombre Receptor'] = nodo.attrib['Nombre']
+
+    if nodo.tag.endswith('TimbreFiscalDigital'):
+        fila['Fecha Timbrado']  = nodo.attrib['FechaTimbrado']
+        fila['UUID']            = nodo.attrib['UUID']
+    
+    return fila
+
 def cfdi_to_dict(option, rfc):
     # Define the path of cfdi's dir 
     dirpath     = get_dir_path_data(option, rfc)
@@ -68,17 +101,7 @@ def cfdi_to_dict(option, rfc):
                     
                     # Get all attribute values for each node in the file
                     for nodo in arbol.iter():
-                        # for atributo in nodo.attrib:
-                        #     fila[atributo] = nodo.attrib[atributo]
-
-                        # Add "Version" attribute of "cfdi:Comprobante" node as new column
-                        if nodo.tag.endswith('Comprobante'):
-                            fila['Version'] = nodo.attrib['Version']
-
-                        # Add "Rfc" and "Nombre" attributes of "cfdi:Receptor" and "cfdi:Emisor" node as new columns
-                        if nodo.tag.endswith('Emisor'):
-                            fila['RFC Emisor'] = nodo.attrib['Rfc']
-                            fila['Nombre Emisor'] = nodo.attrib['Nombre']
+                        fila = add_row(nodo, fila)
                                 
                     # creates a list of the concepts and inserts them in the column "List of Concepts"
                     #conceptos = get_concepts(filename)
@@ -86,19 +109,22 @@ def cfdi_to_dict(option, rfc):
 
                     # Add the row to the list of rows
                     filas.append(fila)
-                    break
+                    
+                    break # eliminame para iterar en todos lo CFDI (ahora solo hay uno para pruebas)
 
-        return filas, dirpath
-    
     except Exception as e:
         print(f'{e}')
         pass
 
+    return filas, dirpath
+
 def dict_to_xlsx(option, rfc):
 
     filas, dirpath = cfdi_to_dict(option, rfc)
+    
     print (filas)
-    return
+    return # eliminame para crear el xlsx (ahora solo imprime en consola)
+    
     try:
         # Create a DataFrame from the list of rows
         df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
