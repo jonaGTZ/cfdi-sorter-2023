@@ -10,18 +10,9 @@ import json
 
 from lxml           import etree
 from datetime           import datetime, timedelta
-from xml.dom            import minidom
-from list_table_builder import get_cfdi_concepts
 
 # Gets the current date and time
 now = datetime.now().strftime('%m%d%Y-%H%M%S')
-
-def get_concepts(filename):
-    cfdi = minidom.parse(filename)
-    # get cfdi nodes to build pdf with required data
-    cfdi_conceptos_node   = cfdi.getElementsByTagName('cfdi:Conceptos')[0]
-    concepts_rows = get_cfdi_concepts(cfdi_conceptos_node.getElementsByTagName('cfdi:Concepto'))
-    return concepts_rows
 
 def get_dir_path_data(option, rfc):
     dirs = {
@@ -35,33 +26,71 @@ def get_dir_path_data(option, rfc):
     }
     return dirs.get(option)
 
+def type_receipt_with_letter(type_recipt):
+    type_recipt_list = {
+        'I':'Ingreso',
+        'N':'Nomina',
+        'E':'Egreso',
+        'P':'Pago'
+    }
+    return type_recipt_list.get(type_recipt)
+
 def add_row(nodo, fila):
-    # Add "Version" attribute of "cfdi:Comprobante" node as new column
+    # Add "cfdi:Comprobante" node as new column
     if nodo.tag.endswith('Comprobante'):
-        if 'Serie' in nodo.attrib: fila['Serie'] = nodo.attrib['Serie']
-        fila['Version']         = nodo.attrib['Version']
-        fila['Fecha Emision']   = nodo.attrib['Fecha']
-        fila['Folio']           = nodo.attrib['Folio']
-        fila['Tipo Comprobante']= nodo.attrib['TipoDeComprobante']
-        fila['Tipo']            = nodo.attrib['TipoDeComprobante'] # crear TipoDeComprobante con letra
-        # 
-        if nodo.attrib['TipoDeComprobante'] == 'P':
-            fila['Metodo Pago'] = 'N/A'
-            fila['Forma Pago']  = 'N/A'
-        else:
-            fila['Metodo Pago'] = nodo.attrib['MetodoPago']
-            fila['Forma Pago']  = nodo.attrib['FormaPago']
+        fila['Serie']            = nodo.attrib.get('Serie'              , "-")
+        fila['Folio']            = nodo.attrib.get('Folio'              , "-")
+        fila['Subtotal']         = nodo.attrib.get('SubTotal'           , "-")
+        fila['Descuento']        = nodo.attrib.get('Descuento'          , "-")
+        fila['Tipo de Cambio']   = nodo.attrib.get('TipoCambio'         , "-")
+        fila['Version']          = nodo.attrib.get('Version'            , "-")
+        fila['Fecha Emision']    = nodo.attrib.get('Fecha'              , "-")
+        fila['Tipo Comprobante'] = nodo.attrib.get('TipoDeComprobante'  , "-")
+        fila['Subtotal']         = nodo.attrib.get('SubTotal'           , "-")
+        fila['Total']            = nodo.attrib.get('Total'              , "-")
+        fila['Moneda']           = nodo.attrib.get('Moneda'             , "-")
+        fila['CP Emisor']        = nodo.attrib.get('LugarExpedicion'    , "-")
+        fila['Moneda']           = nodo.attrib.get('Moneda'             , "-")
+        fila['Metodo Pago']      = nodo.attrib.get('MetodoPago'         , "-")
+        fila['Forma Pago']       = nodo.attrib.get('FormaPago'          , "-")
+        fila['Tipo']             = type_receipt_with_letter(fila['TipoDeComprobante'])
 
     # Add "cfdi:Emisor" attribs as new row
+    if nodo.tag.endswith('CfdiRelacionados'):
+        fila['Tipo Relacion']    = nodo.attrib.get('TipoRelacion', "-")
+        
     if nodo.tag.endswith('Emisor'):
-        fila['RFC Emisor']      = nodo.attrib['Rfc']
-        fila['Nombre Emisor']   = nodo.attrib['Nombre']
+        fila['RFC Emisor']       = nodo.attrib.get('Rfc'    , "-")
+        fila['Nombre Emisor']    = nodo.attrib.get('Nombre' , "-")
 
     # Add "cfdi:Receptor" attribs as new row
     if nodo.tag.endswith('Receptor'):
-        fila['RFC Receptor']    = nodo.attrib['Rfc']
-        fila['Nombre Receptor'] = nodo.attrib['Nombre']
+        fila['RFC Receptor']    = nodo.attrib.get('Rfc'     , "-")
+        fila['Nombre Receptor'] = nodo.attrib.get('Nombre'  , "-")
 
+    if nodo.tag.endswith('Conceptos'):
+        # Create an empty dictionary to store the concept data
+        lista_conceptos = []
+
+        conceptos = nodo.xpath('//cfdi:Conceptos/cfdi:Concepto', namespaces=nodo.nsmap)
+        # Iterate over the cfdi:Concept elements and add their data to the dictionary
+        for concepto in conceptos:
+            datos_concepto = {
+                "ClaveProdServ"     : concepto.get("ClaveProdServ"   , "-"),
+                "NoIdentificacion"  : concepto.get("NoIdentificacion", "-"),
+                "Cantidad"          : concepto.get("Cantidad"        , "-"),
+                "Clave Unidad"      : concepto.get("ClaveUnidad"     , "-"),
+                "Unidad"            : concepto.get("Unidad"          , "-"),
+                "Descripcion"       : concepto.get("Descripcion"     , "-"),
+                "Valor Unitario"    : concepto.get("ValorUnitario"   , "-"),
+                "Importe"           : concepto.get("Importe"         , "-"),
+                "Descuento"         : concepto.get("Descuento"       , "-")
+            }
+            lista_conceptos.append(datos_concepto)
+        # Add the list of concepts to the main dictionary
+        fila["Lista de Conceptos"] = json.dumps(lista_conceptos)
+    
+    # Add "cfdi:TimbreFiscalDigital" attribs as new row
     if nodo.tag.endswith('TimbreFiscalDigital'):
         fila['Fecha Timbrado']  = nodo.attrib['FechaTimbrado']
         fila['UUID']            = nodo.attrib['UUID']
@@ -110,7 +139,7 @@ def cfdi_to_dict(option, rfc):
                     # Add the row to the list of rows
                     filas.append(fila)
                     
-                    break # eliminame para iterar en todos lo CFDI (ahora solo hay uno para pruebas)
+                    # break # eliminame para iterar en todos lo CFDI (ahora solo hay uno para pruebas)
 
     except Exception as e:
         print(f'{e}')
@@ -122,8 +151,8 @@ def dict_to_xlsx(option, rfc):
 
     filas, dirpath = cfdi_to_dict(option, rfc)
     
-    print (filas)
-    return # eliminame para crear el xlsx (ahora solo imprime en consola)
+    # print (filas)
+    # return # eliminame para crear el xlsx (ahora solo imprime en consola)
     
     try:
         # Create a DataFrame from the list of rows
@@ -158,5 +187,6 @@ def dict_to_xlsx(option, rfc):
 # Main script code
 if __name__ == '__main__':
     # Code that is executed when the script is called directly
-    dict_to_xlsx('PAGO_R', 'MAP850101324')
+    # DES_BON_DEV, INGRESO
+    dict_to_xlsx('INGRESO', 'MAP850101324')
     pass
