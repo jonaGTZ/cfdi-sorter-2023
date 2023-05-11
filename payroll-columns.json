@@ -1,7 +1,7 @@
 {
 	"Estado SAT":"",
 	"Fecha Consulta":"",
-	"Versión":"",
+	"Version":"",
 	"Fecha Emision"	:"",
 	"Fecha Timbrado":"",	
 	"Serie":"",	
@@ -34,7 +34,7 @@
 	"Sello":"",	
 	"No Certificado":"",	
 	"Certificado":"",													
-	"Version":"",	
+	"Version Nomina":"",	
 	"Tipo Nomina":"",	
 	"Fecha Pago":"",	
 	"Fecha Inicial Pago":"",	
