@@ -39,13 +39,17 @@ def xlsx_general_report(rfc):
             # Get the most recent file in the directory
             files = os.listdir(directory)
             if files:
-                file_path = max([os.path.join(directory, f) for f in files if f.endswith('.xlsx')], key=os.path.getctime)
-                file_paths.append(file_path)
+                try:
+                    file_path = max([os.path.join(directory, f) for f in files if f.endswith('.xlsx')], key=os.path.getctime)
+                    file_paths.append(file_path)
+                except Exception as e:
+                    print(f'E1: {directory}: {e}')
+                    pass
             else:
-                print(f"E1: Can't find the route: {directory}")
+                print(f"E2: Can't find the route: {directory}")
         else:
-            print(f"E2: Doesn't exist: {directory}")
-
+            print(f"E3: Doesn't exist: {directory}")
+     
     # Create a new workbook
     nwb = Workbook()
 
@@ -69,7 +73,7 @@ def xlsx_general_report(rfc):
                     start_color='730707', end_color='730707', fill_type='solid')
 
         except Exception as e:
-            print(f'E3: Error while reading book: {e}')
+            print(f'E4: Error while reading book: {e}')
             continue
 
     # Delete any extra sheets that were created in the new workbook
@@ -80,4 +84,4 @@ def xlsx_general_report(rfc):
     try:
         nwb.save(f'{rfc}/reporte-general-{fecha_actual}.xlsx')
     except Exception as e:
-        print(f'E4: Error saving the new workbook: {e}')
+        print(f'E5: Error saving the new workbook: {e}')

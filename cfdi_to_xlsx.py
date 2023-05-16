@@ -8,9 +8,10 @@ import os
 import pandas as pd
 import json
 
-from lxml       import etree
-from datetime   import datetime, timedelta
-from cfdi_row   import cfdi_row 
+from lxml               import etree
+from datetime           import datetime, timedelta
+from cfdi_row           import cfdi_row 
+from cfdi_payroll_row   import cfdi_payroll_row
 
 # Gets the current date and time
 now = datetime.now().strftime('%m%d%Y-%H%M%S')
@@ -32,7 +33,7 @@ def cfdi_to_dict(option, rfc):
     dirpath     = get_dir_path_data(option, rfc)
     
     filas       = []
-
+    
     try:
         # Iterate over all XML files in the specified path
         for dir, subdir, files in os.walk(dirpath):
@@ -52,16 +53,17 @@ def cfdi_to_dict(option, rfc):
                         if option == "NOMINA":
                             with open('payroll-columns.json', encoding='utf-8') as f:
                                 fila = json.load(f)
+                                for nodo in arbol.iter():
+                                    fila = cfdi_payroll_row(nodo, fila)
                         else:
                             with open('cfdi-colums.json', encoding='utf-8') as f:
-                                fila = json.load(f)        
+                                fila = json.load(f)
+                                for nodo in arbol.iter():
+                                    fila = cfdi_row(nodo, fila)
                     except:
                         raise Exception(f'E2: Impossible to get xlsx columns: {option}')
                     
                     # Get all attribute values for each node in the file
-                    for nodo in arbol.iter():
-                        fila = cfdi_row(nodo, fila)
-
                     fila['Archivo XML'] = filename
 
                     # Add the row to the list of rows
@@ -76,13 +78,12 @@ def cfdi_to_dict(option, rfc):
 def dict_to_xlsx(option, rfc):
 
     filas, dirpath = cfdi_to_dict(option, rfc)
-    
     try:
         # Create a DataFrame from the list of rows
         df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
 
         # Create a ExcelWriter object
-        writer = pd.ExcelWriter(f"{dirpath}/{now}-{option}.xlsx", engine='xlsxwriter')
+        writer = pd.ExcelWriter(f"{dirpath}/{option}-{now}.xlsx", engine='xlsxwriter')
 
         # Define the formatting for the header row
         header_format = writer.book.add_format({'bold': True, 'bg_color': '#730707', 'font_color': 'white'})
@@ -96,20 +97,13 @@ def dict_to_xlsx(option, rfc):
         for col_num, value in enumerate(df.columns.values):
             worksheet.write(0, col_num, value, header_format)
 
-        # Set the column widths to auto-fit
-        for i, col in enumerate(df.columns):
-            column_width = max(df[col].astype(str).map(len).max(), len(col))
-            worksheet.set_column(i, i, column_width)
+        # # Set the column widths to auto-fit
+        # for i, col in enumerate(df.columns):
+        #     column_width = max(df[col].astype(str).map(len).max(), len(col))
+        #     worksheet.set_column(i, i, column_width)
 
         # Save the Excel file
         writer.close()
     except Exception as e:
         print(f'E3: {e}')
         pass
-
-# Main script code
-if __name__ == '__main__':
-    # Code that is executed when the script is called directly
-    # DES_BON_DEV, INGRESO, PAGO_R, GASTO, NOMINA
-    dict_to_xlsx('GASTO', 'MAP850101324')
-    pass

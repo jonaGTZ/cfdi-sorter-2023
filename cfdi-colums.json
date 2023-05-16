@@ -1,7 +1,6 @@
 {
     "Estado SAT":"",
     "Fecha Consulta":"",
-    "Validacion EFOS":"",
     "Version":"",
     "Fecha Emision":"",
     "Fecha Timbrado":"",
@@ -14,6 +13,9 @@
     "Forma Pago":"",
     "Subtotal":"",
     "Descuento":"",
+    "Lista de Traslado":[{
+
+    }],
     "IEPS":"",
     "IVA 16%":"",
     "Retención IVA":"",

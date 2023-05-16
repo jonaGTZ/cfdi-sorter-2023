@@ -11,7 +11,7 @@ import os
 from cfdi_sorter    import cfdi_sorter
 from xlsx_report    import xlsx_general_report
 from pdf_report     import generate_pdf
-from cfdi_to_xlsx   import cfdi_to_xlsx
+from cfdi_to_xlsx   import dict_to_xlsx
 
 # Function to clear the console screen
 def clear():
@@ -39,7 +39,7 @@ def select_type_report(rfc):
         opcion = input("\nSelect an option: ")
 
         if options.get(opcion):
-            cfdi_to_xlsx(f'{options.get(opcion)}', rfc)
+            dict_to_xlsx(f'{options.get(opcion)}', rfc)
             input("Press Enter to return to the main menu...")
         elif opcion == '8':
             xlsx_general_report(rfc)
