@@ -59,7 +59,7 @@ def cfdi_to_dict(option, rfc):
                             with open('cfdi-colums.json', encoding='utf-8') as f:
                                 fila = json.load(f)
                                 for nodo in arbol.iter():
-                                    fila = cfdi_row(nodo, fila)
+                                    fila = cfdi_row(nodo, fila, filename)
                     except:
                         raise Exception(f'E2: Impossible to get xlsx columns: {option}')
                     
@@ -76,9 +76,9 @@ def cfdi_to_dict(option, rfc):
     return filas, dirpath
 
 def dict_to_xlsx(option, rfc):
-
-    filas, dirpath = cfdi_to_dict(option, rfc)
     try:
+        filas, dirpath = cfdi_to_dict(option, rfc)
+
         # Create a DataFrame from the list of rows
         df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
 
@@ -107,3 +107,9 @@ def dict_to_xlsx(option, rfc):
     except Exception as e:
         print(f'E3: {e}')
         pass
+
+# Main script code
+if __name__ == '__main__':
+    # Code that is executed when the script is called directly
+    dict_to_xlsx("PAGO_R", "MCM8501012U0")
+    pass

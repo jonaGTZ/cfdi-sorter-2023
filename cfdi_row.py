@@ -15,7 +15,7 @@ def type_receipt_with_letter(type_recipt):
     }
     return type_recipt_list.get(type_recipt)
 
-def cfdi_row(nodo, fila):
+def cfdi_row(nodo, fila, filename):
     try:
         # Add "cfdi:Comprobante" node as new column
         if nodo.tag.endswith('Comprobante'):
@@ -168,12 +168,7 @@ def cfdi_row(nodo, fila):
             fila['Objeto Impuesto_DR']      = nodo.attrib.get('ImporteDR', '')
             fila['Importe Impuesto 16%_DR'] = nodo.attrib.get('ImporteDR', '')
 
-        # Nomina 
-        # Add "cfdi:TimbreFiscalDigital" attribs as new row
-        if nodo.tag.endswith('Nomina'):
-            fila['Objeto Impuesto_DR']      = nodo.attrib.get('ImporteDR', '')
-
         return fila
     except Exception as e:
-            print(f'R01: {e} {nodo.tag}')
+            print(f'R01: {e} {nodo.tag} \n {filename}')
             pass

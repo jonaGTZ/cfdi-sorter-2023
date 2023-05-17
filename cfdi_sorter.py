@@ -67,7 +67,12 @@ def cfdi_sorter(rfc, directory):
 
             # Check if the UUID is already in the set
             if uuid in uuids_set:
-                raise Exception(f"E1: {uuid} already exists.")
+                try:
+                    os.makedirs(os.path.join(rfc, err_directory, 'Duplicados'))
+                except FileExistsError :                    
+                    shutil.copy(filename, os.path.join(rfc, err_directory, 'Duplicados', os.path.basename(filename)))
+                    print(f"E1: {uuid} already exists.")
+                    continue
 
             # Add the UUID to the set
             uuids_set.add(uuid)
