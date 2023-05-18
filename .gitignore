@@ -1,11 +1,8 @@
-#BORRAR
+# BORRAR
 prueba.py
-tandemlogo.png
-CFDI_RFC_MUNICIPIO
-new_xml_data/
+xml_data
 
-Encabezados_Reportes.xlsx
-#skip dir
+# skip dir
 Clientes/
 MAP850101324/
 MCM8501012U0/
@@ -13,6 +10,15 @@ MHS850101F67/
 MOP850101NX1/
 MTR9302155L8/
 .vscode/
+
+# JSON municipality
+MAP850101324_ayudas.json
+MAP850101324_des_bon_dev.json
+MAP850101324_gastos.json
+MAP850101324_ingreso.json
+MAP850101324_nomina.json
+MAP850101324_pagosE.json
+MAP850101324_pagosR.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

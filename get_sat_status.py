@@ -7,17 +7,16 @@
 # Description:      [Brief description of the purpose of the script]
 
 import requests.exceptions
+import json
 
-from datetime   import datetime
+
 from cfdiclient import Validacion
 
 # Create an instance of the Validacion class
 validation = Validacion()
 
-# Gets the current date and time
-now = datetime.now().strftime('%m%d%Y-%H%M%S')
-
 def get_sat_status(rfc_sender, rfc_receiver, total, uuid):
+
     status = None
     while not status:
         try:
