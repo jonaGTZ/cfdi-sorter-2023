@@ -7,9 +7,13 @@
 # Description:      [Brief description of the purpose of the script]
 
 # import necessary modules
-from lxml import etree
 import os
 import shutil
+import json
+
+from datetime       import datetime
+from lxml           import etree
+from get_sat_status import get_sat_status
 
 # Define the subdirectories
 emisor_directory        = 'Emisor'
@@ -18,7 +22,7 @@ err_directory           = 'Error'
 
 # Define the sub-subdirectories
 ingresos_directory      = 'Ingresos'
-gastosR_directory       = 'Gastos'
+gastos_directory        = 'Gastos'
 ayudas_directory        = 'Ayudas'
 des_bon_dev_directory   = 'Descuento_Bonificaciones_Devoluciones'
 nomina_directory        = 'Nomina'
@@ -48,6 +52,14 @@ def cfdi_sorter(rfc, directory):
     # Initialize the set to store the UUIDs
     uuids_set = set()
 
+    ingresos_dict       = {}
+    gastos_dict         = {}
+    ayudas_dict         = {}
+    des_bon_dev_dict    = {}
+    nomina_dict         = {}
+    pagosE_dict         = {}
+    pagosR_dict         = {}
+
     # Calls the function "filenames" Iterating over each XML file in the directory
     for filename in filenames(directory):
         try:
@@ -60,6 +72,7 @@ def cfdi_sorter(rfc, directory):
                 tipo        = root.get('TipoDeComprobante')
                 metodo_pago = root.get('MetodoPago')
                 version     = root.get('Version')
+                total       = root.get('Total')
             
             emisor_query, receptor_query, complemento_query = get_cfdi_version(version)
 
@@ -67,7 +80,12 @@ def cfdi_sorter(rfc, directory):
 
             # Check if the UUID is already in the set
             if uuid in uuids_set:
-                raise Exception(f"E1: {uuid} already exists.")
+                try:
+                    os.makedirs(os.path.join(rfc, err_directory, 'Duplicados'))
+                except FileExistsError :                    
+                    shutil.copy(filename, os.path.join(rfc, err_directory, 'Duplicados', os.path.basename(filename)))
+                    print(f"E1: {uuid} already exists.")
+                    continue
 
             # Add the UUID to the set
             uuids_set.add(uuid)
@@ -80,6 +98,19 @@ def cfdi_sorter(rfc, directory):
             if emisor is None or receptor is None or tipo is None:
                 raise Exception(f"E2: {filename} does not meet the requirements of the CFDI sorter standard.")
 
+            # get SAT status
+            sat_status = 'Cancelado'
+            try:
+                sat_status = get_sat_status(emisor, receptor, total, uuid)
+            except:
+                raise Exception(f'E3: {filename} failed to get sat status.')
+
+            # Create a dictionary with the data
+            data = {
+                'Estado SAT'    : sat_status,
+                'Fecha Consulta': datetime.now().strftime('%m%d%Y-%H%M%S')
+            }
+            
             # Check if the value of metodo_pago is valid
             if metodo_pago not in ['PUE', 'PPD']:
                 if tipo == 'P':
@@ -87,27 +118,34 @@ def cfdi_sorter(rfc, directory):
                 else:
                     print(f"{filename} : E3: MetodoPago is not valid: {metodo_pago}")
                     continue
-
+            
             # Create the appropriate sub-subdirectory and copy the XML file based on the attribute values
             if   tipo == 'I' and emisor      == rfc:
                 subdirectory = ingresos_directory
+                ingresos_dict[uuid] = [data]
             elif tipo == 'I' and receptor    == rfc:
-                subdirectory = gastosR_directory
+                subdirectory = gastos_directory
+                gastos_dict[uuid] = [data]
             elif tipo == 'E' and emisor      == rfc:
                 subdirectory = ayudas_directory
+                ayudas_dict[uuid] = [data]
             elif tipo == 'E' and receptor    == rfc:
                 subdirectory = des_bon_dev_directory
+                des_bon_dev_dict[uuid] = [data]
             elif tipo == 'N' and emisor      == rfc:
                 subdirectory = nomina_directory
+                nomina_dict[uuid] = [data]
             elif tipo == 'P' and emisor      == rfc:
                 subdirectory = pagosE_directory
+                pagosE_dict[uuid] = [data]
             elif tipo == 'P' and receptor    == rfc:
                 subdirectory = pagosR_directory
+                pagosR_dict[uuid] = [data]
             else:
                 raise Exception(f"E4: {filename} does not belong to any of the classifier folders.")
 
             # Create the sub-subdirectory inside the appropriate subdirectory
-            sub_subdirectory = os.path.join(emisor_directory, subdirectory, metodo_pago) if emisor == rfc else os.path.join(receptor_directory, subdirectory, metodo_pago)
+            sub_subdirectory = os.path.join(emisor_directory, subdirectory, sat_status, metodo_pago) if emisor == rfc else os.path.join(receptor_directory, subdirectory, sat_status, metodo_pago)
             try:
                 os.makedirs(os.path.join(rfc, sub_subdirectory))
             except FileExistsError :
@@ -124,3 +162,27 @@ def cfdi_sorter(rfc, directory):
                 pass
             shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
             continue
+    try:
+        with open(f'{rfc}_ingreso.json', 'a') as file:
+            json.dump(ingresos_dict, file, indent=4)
+
+        with open(f'{rfc}_gastos.json', 'a') as file:
+            json.dump(gastos_dict, file, indent=4)
+
+        with open(f'{rfc}_ayudas.json', 'a') as file:
+            json.dump(ayudas_dict, file, indent=4)
+
+        with open(f'{rfc}_des_bon_dev.json', 'a') as file:
+            json.dump(des_bon_dev_dict, file, indent=4)
+
+        with open(f'{rfc}_nomina.json', 'a') as file:
+            json.dump(nomina_dict, file, indent=4)
+
+        with open(f'{rfc}_pagosE.json', 'a') as file:
+            json.dump(pagosE_dict, file, indent=4)
+
+        with open(f'{rfc}_pagosR.json', 'a') as file:
+            json.dump(pagosR_dict, file, indent=4)
+
+    except (FileExistsError, Exception) as e:
+        raise ('ocurrio un error inesperado')    
