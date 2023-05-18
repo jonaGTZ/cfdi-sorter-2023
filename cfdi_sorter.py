@@ -7,9 +7,10 @@
 # Description:      [Brief description of the purpose of the script]
 
 # import necessary modules
-from lxml import etree
 import os
 import shutil
+from lxml           import etree
+from get_sat_status import get_sat_status
 
 # Define the subdirectories
 emisor_directory        = 'Emisor'
@@ -60,6 +61,7 @@ def cfdi_sorter(rfc, directory):
                 tipo        = root.get('TipoDeComprobante')
                 metodo_pago = root.get('MetodoPago')
                 version     = root.get('Version')
+                total       = root.get('Total')
             
             emisor_query, receptor_query, complemento_query = get_cfdi_version(version)
 
@@ -85,6 +87,16 @@ def cfdi_sorter(rfc, directory):
             if emisor is None or receptor is None or tipo is None:
                 raise Exception(f"E2: {filename} does not meet the requirements of the CFDI sorter standard.")
 
+            # get SAT status
+            sat_status = 'Cancelado'
+            try:
+                sat_status = get_sat_status(emisor, receptor, total, uuid)
+            except:
+                raise Exception(f'E3: {filename} failed to get sat status.')
+           
+            print (sat_status)
+            continue
+            
             # Check if the value of metodo_pago is valid
             if metodo_pago not in ['PUE', 'PPD']:
                 if tipo == 'P':
@@ -112,7 +124,7 @@ def cfdi_sorter(rfc, directory):
                 raise Exception(f"E4: {filename} does not belong to any of the classifier folders.")
 
             # Create the sub-subdirectory inside the appropriate subdirectory
-            sub_subdirectory = os.path.join(emisor_directory, subdirectory, metodo_pago) if emisor == rfc else os.path.join(receptor_directory, subdirectory, metodo_pago)
+            sub_subdirectory = os.path.join(emisor_directory, subdirectory, sat_status, metodo_pago) if emisor == rfc else os.path.join(receptor_directory, subdirectory, sat_status, metodo_pago)
             try:
                 os.makedirs(os.path.join(rfc, sub_subdirectory))
             except FileExistsError :
@@ -120,6 +132,7 @@ def cfdi_sorter(rfc, directory):
 
             # Copy the XML file to the appropriate sub-subdirectory
             shutil.copy(filename, os.path.join(rfc, sub_subdirectory, os.path.basename(filename)))
+            break
 
         except Exception as e:
             print(f"{e}")
@@ -129,3 +142,9 @@ def cfdi_sorter(rfc, directory):
                 pass
             shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
             continue
+    
+# Main script code
+if __name__ == '__main__':
+    # Code that is executed when the script is called directly
+    cfdi_sorter('MAP850101324', 'Clientes/MAP')
+    pass

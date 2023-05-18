@@ -7,9 +7,6 @@
 import json
 from lxml import etree
 
-
-
-
 def cfdi_payroll_row(nodo, fila):
     try:
 

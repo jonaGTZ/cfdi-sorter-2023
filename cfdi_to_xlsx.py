@@ -9,7 +9,7 @@ import pandas as pd
 import json
 
 from lxml               import etree
-from datetime           import datetime, timedelta
+from datetime           import datetime
 from cfdi_row           import cfdi_row 
 from cfdi_payroll_row   import cfdi_payroll_row
 

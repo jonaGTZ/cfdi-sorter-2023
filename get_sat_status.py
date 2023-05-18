@@ -1,0 +1,29 @@
+#!/usr/bin/env python3.11.1
+# -*- coding: utf-8 -*-
+
+# script header
+# Author:           [Hugo Berra Salazar, ]
+# Creation date:    [05/17/2023]
+# Description:      [Brief description of the purpose of the script]
+
+import requests.exceptions
+
+from datetime   import datetime
+from cfdiclient import Validacion
+
+# Create an instance of the Validacion class
+validation = Validacion()
+
+# Gets the current date and time
+now = datetime.now().strftime('%m%d%Y-%H%M%S')
+
+def get_sat_status(rfc_sender, rfc_receiver, total, uuid):
+    status = None
+    while not status:
+        try:
+            status = validation.obtener_estado(rfc_sender, rfc_receiver, total, uuid)
+        except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
+            print(f'{e}')
+            continue
+
+    return status.get('estado')
