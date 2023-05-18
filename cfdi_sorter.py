@@ -22,7 +22,7 @@ err_directory           = 'Error'
 
 # Define the sub-subdirectories
 ingresos_directory      = 'Ingresos'
-gastos_directory       = 'Gastos'
+gastos_directory        = 'Gastos'
 ayudas_directory        = 'Ayudas'
 des_bon_dev_directory   = 'Descuento_Bonificaciones_Devoluciones'
 nomina_directory        = 'Nomina'
@@ -186,9 +186,3 @@ def cfdi_sorter(rfc, directory):
 
     except (FileExistsError, Exception) as e:
         raise ('ocurrio un error inesperado')    
-    
-# Main script code
-if __name__ == '__main__':
-    # Code that is executed when the script is called directly
-    cfdi_sorter('MAP850101324', 'xml_data')
-    pass

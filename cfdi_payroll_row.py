@@ -5,9 +5,9 @@
 
 # import necessary modules
 import json
-from lxml import etree
+from set_sat_status import set_sat_status
 
-def cfdi_payroll_row(nodo, fila):
+def cfdi_payroll_row(nodo, fila, filename, option, rfc):
     try:
 
         emisor      = '{http://www.sat.gob.mx/cfd/3}Emisor'
@@ -91,6 +91,10 @@ def cfdi_payroll_row(nodo, fila):
         if nodo.tag.endswith('TimbreFiscalDigital'):
             fila['Fecha Timbrado']          = nodo.attrib.get('FechaTimbrado'           , '')
             fila['UUID']                    = nodo.attrib.get('UUID'                    , '')
+            # call to the data stored in the json generated in the sorter
+            estado_sat, fecha_consulta      = set_sat_status(nodo.attrib.get('UUID', ''), option, rfc)
+            fila['Estado SAT']              = estado_sat
+            fila['Fecha Consulta']          = fecha_consulta
 
         # Add "nomina12:Nomina" attribs as new row
         if nodo.tag.endswith("{http://www.sat.gob.mx/nomina12}Nomina"):
@@ -168,5 +172,5 @@ def cfdi_payroll_row(nodo, fila):
         return fila
     
     except Exception as e:
-            print(f'R01: {e} {nodo.tag}')
+            print(f'R01: {e} {nodo.tag} \n {filename}')
             pass

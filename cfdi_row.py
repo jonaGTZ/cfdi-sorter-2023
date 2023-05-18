@@ -5,7 +5,7 @@
 
 # import necessary modules
 import json
-from lxml import etree
+from set_sat_status import set_sat_status
 
 def type_receipt_with_letter(type_recipt):
     type_recipt_list = {
@@ -15,10 +15,11 @@ def type_receipt_with_letter(type_recipt):
     }
     return type_recipt_list.get(type_recipt)
 
-def cfdi_row(nodo, fila, filename):
+def cfdi_row(nodo, fila, filename, option, rfc):
     try:
         # Add "cfdi:Comprobante" node as new column
         if nodo.tag.endswith('Comprobante'):
+
             fila['Version']                 = nodo.attrib.get('Version'            , '')
             fila['Fecha Emision']           = nodo.attrib.get('Fecha'              , '')
             fila['Serie']                   = nodo.attrib.get('Serie'              , '')
@@ -130,6 +131,10 @@ def cfdi_row(nodo, fila, filename):
         if nodo.tag.endswith('TimbreFiscalDigital'):
             fila['Fecha Timbrado']      = nodo.attrib.get('FechaTimbrado', '')
             fila['UUID']                = nodo.attrib.get('UUID', '')
+            # call to the data stored in the json generated in the sorter
+            estado_sat, fecha_consulta  = set_sat_status(nodo.attrib.get('UUID', ''), option, rfc)
+            fila['Estado SAT']          = estado_sat
+            fila['Fecha Consulta']      = fecha_consulta
         
         # Add "cfdi:TimbreFiscalDigital" attribs as new row
         if nodo.tag.endswith('Pagos'):
@@ -169,6 +174,7 @@ def cfdi_row(nodo, fila, filename):
             fila['Importe Impuesto 16%_DR'] = nodo.attrib.get('ImporteDR', '')
 
         return fila
+    
     except Exception as e:
             print(f'R01: {e} {nodo.tag} \n {filename}')
             pass

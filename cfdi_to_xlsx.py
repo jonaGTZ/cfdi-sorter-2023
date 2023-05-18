@@ -13,9 +13,6 @@ from datetime           import datetime
 from cfdi_row           import cfdi_row 
 from cfdi_payroll_row   import cfdi_payroll_row
 
-# Gets the current date and time
-now = datetime.now().strftime('%m%d%Y-%H%M%S')
-
 def get_dir_path_data(option, rfc):
     dirs = {
         'AYUDAS'        : f'{rfc}/Emisor/Ayudas/',
@@ -54,12 +51,12 @@ def cfdi_to_dict(option, rfc):
                             with open('payroll-columns.json', encoding='utf-8') as f:
                                 fila = json.load(f)
                                 for nodo in arbol.iter():
-                                    fila = cfdi_payroll_row(nodo, fila)
+                                    fila = cfdi_payroll_row(nodo, fila, filename, option, rfc)
                         else:
                             with open('cfdi-colums.json', encoding='utf-8') as f:
                                 fila = json.load(f)
                                 for nodo in arbol.iter():
-                                    fila = cfdi_row(nodo, fila, filename)
+                                    fila = cfdi_row(nodo, fila, filename, option, rfc)
                     except:
                         raise Exception(f'E2: Impossible to get xlsx columns: {option}')
                     
@@ -83,7 +80,7 @@ def dict_to_xlsx(option, rfc):
         df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
 
         # Create a ExcelWriter object
-        writer = pd.ExcelWriter(f"{dirpath}/{option}-{now}.xlsx", engine='xlsxwriter')
+        writer = pd.ExcelWriter(f"{dirpath}/{option}-{datetime.now().strftime('%m%d%Y-%H%M%S')}.xlsx", engine='xlsxwriter')
 
         # Define the formatting for the header row
         header_format = writer.book.add_format({'bold': True, 'bg_color': '#730707', 'font_color': 'white'})
@@ -107,9 +104,3 @@ def dict_to_xlsx(option, rfc):
     except Exception as e:
         print(f'E3: {e}')
         pass
-
-# Main script code
-if __name__ == '__main__':
-    # Code that is executed when the script is called directly
-    dict_to_xlsx("PAGO_R", "MCM8501012U0")
-    pass
