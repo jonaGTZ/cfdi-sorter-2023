@@ -6,6 +6,7 @@
 # import necessary modules
 import json
 from set_sat_status import set_sat_status
+from lxml import etree
 
 def type_receipt_with_letter(type_recipt):
     type_recipt_list = {
@@ -141,13 +142,17 @@ def cfdi_row(nodo, fila, filename, option, rfc):
             # Create an empty dictionary to store the payment data
             payment_list = []
 
-            # set payment namespace for CFDI version
-            if nodo.attrib.get('Version') == '2.0':
-                paynamespace = 'pago20:'
-            else:
-                paynamespace = 'pago10:'
+            try:
+                # set payment namespace for CFDI version
+                namespace = 'pago10'
+                
+                if nodo.attrib.get('Version') == '2.0':
+                    namespace = 'pago20'
 
-            payments = nodo.xpath(f'//{paynamespace}Pago/{paynamespace}DoctoRelacionado', namespaces=nodo.nsmap)
+                payments = nodo.xpath(f'//{namespace}:Pago/{namespace}:DoctoRelacionado', namespaces=nodo.nsmap)
+            
+            except etree.XPathEvalError as e:
+                return fila
             
             # Iterate over the cfdi:Concept elements and add their data to the dictionary 
             for payment in payments:
@@ -161,8 +166,10 @@ def cfdi_row(nodo, fila, filename, option, rfc):
                     'Por Pagar'         : payment.get('ImpSaldoInsoluto'    , '')
                 }
                 payment_list.append(payment_data)
-                
-            fila['Lista de Pagos']      = json.dumps(payment_list)
+                    
+                fila['Lista de Pagos']      = json.dumps(payment_list)
+            
+            
             fila['Fecha Pago']          = nodo.attrib.get('FechaPago'   , '')
             fila['Moneda Pago']         = nodo.attrib.get('MonedaP'     , '')
             fila['Tipo Cambio']         = nodo.attrib.get('TipoCambioP' , '')
@@ -172,9 +179,9 @@ def cfdi_row(nodo, fila, filename, option, rfc):
         if nodo.tag.endswith('TrasladoDR'):
             fila['Objeto Impuesto_DR']      = nodo.attrib.get('ImporteDR', '')
             fila['Importe Impuesto 16%_DR'] = nodo.attrib.get('ImporteDR', '')
-
-        return fila
     
     except Exception as e:
-            print(f'R01: {e} {nodo.tag} \n {filename}')
+            print(f'{e} \nfilename: {filename}')
             pass
+    
+    return fila

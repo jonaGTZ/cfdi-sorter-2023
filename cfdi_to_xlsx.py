@@ -56,9 +56,12 @@ def cfdi_to_dict(option, rfc):
                             with open('cfdi-colums.json', encoding='utf-8') as f:
                                 fila = json.load(f)
                                 for nodo in arbol.iter():
-                                    fila = cfdi_row(nodo, fila, filename, option, rfc)
+                                    try:
+                                        fila = cfdi_row(nodo, fila, filename, option, rfc)
+                                    except:
+                                        raise Exception(f'E2: an error occurred filling the dictionary {filename}')
                     except:
-                        raise Exception(f'E2: Impossible to get xlsx columns: {option}')
+                        raise Exception(f'E3: Impossible to get xlsx columns: {filename}')
                     
                     # Get all attribute values for each node in the file
                     fila['Archivo XML'] = filename
@@ -66,11 +69,11 @@ def cfdi_to_dict(option, rfc):
                     # Add the row to the list of rows
                     filas.append(fila)
 
+        return filas, dirpath
+    
     except Exception as e:
-        print(f'{e}')
+        print(f'cfdi_to_dict E: {e}')
         pass
-
-    return filas, dirpath
 
 def dict_to_xlsx(option, rfc):
     try:
@@ -102,5 +105,5 @@ def dict_to_xlsx(option, rfc):
         # Save the Excel file
         writer.close()
     except Exception as e:
-        print(f'E3: {e}')
+        print(f'E4: {e}')
         pass
