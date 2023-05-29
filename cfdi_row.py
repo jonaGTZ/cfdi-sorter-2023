@@ -20,7 +20,6 @@ def cfdi_row(nodo, fila, filename, option, rfc):
     try:
         # Add "cfdi:Comprobante" node as new column
         if nodo.tag.endswith('Comprobante'):
-
             fila['Version']                 = nodo.attrib.get('Version'            , '')
             fila['Fecha Emision']           = nodo.attrib.get('Fecha'              , '')
             fila['Serie']                   = nodo.attrib.get('Serie'              , '')
@@ -31,14 +30,11 @@ def cfdi_row(nodo, fila, filename, option, rfc):
             fila['Forma Pago']              = nodo.attrib.get('FormaPago'          , '')
             fila['Subtotal']                = nodo.attrib.get('SubTotal'           , '')
             fila['Descuento']               = nodo.attrib.get('Descuento'          , '')
-
             fila['Total']                   = nodo.attrib.get('Total'              , '')
             fila['Moneda']                  = nodo.attrib.get('Moneda'             , '')
             fila['Tipo de Cambio']          = nodo.attrib.get('TipoCambio'         , '')
-
             fila['CP Emisor']               = nodo.attrib.get('LugarExpedicion'    , '')
             fila['Moneda']                  = nodo.attrib.get('Moneda'             , '')
-            
             fila['Sello']                   = nodo.attrib.get('Sello'              , '')
             fila['No Certificado']          = nodo.attrib.get('NoCertificado'      , '')
             fila['Certificado']             = nodo.attrib.get('Certificado'        , '')
@@ -91,12 +87,12 @@ def cfdi_row(nodo, fila, filename, option, rfc):
                 }
                 concept_list.append(concept_data)
             # Add the list of concepts to the main dictionary
-            fila['Lista de Conceptos']  = json.dumps(concept_list)
-            fila['Objeto Impuesto']     = nodo.attrib.get('ObjetoImp', '')
+            fila['Lista de Conceptos']      = json.dumps(concept_list, ensure_ascii=False).encode('utf-8')
+            fila['Objeto Impuesto']         = nodo.attrib.get('ObjetoImp', '')
         
         # Add "cfdi:InformacionAduanera" attribs as new row
         if nodo.tag.endswith('InformacionAduanera'):
-            fila['Numero Pedimento']    = nodo.attrib.get('NumeroPedimento', '')
+            fila['Numero Pedimento']        = nodo.attrib.get('NumeroPedimento', '')
 
         # # Add "cfdi:Traslado" attribs as new row
         if nodo.tag.endswith('Traslado'):
@@ -112,11 +108,11 @@ def cfdi_row(nodo, fila, filename, option, rfc):
                 }
                 transfer_list.append(transfer_data)
             # Add the list of concepts to the main dictionary
-            fila['Lista de Traslado']  = json.dumps(transfer_list)
+            fila['Lista de Traslado']       = json.dumps(transfer_list)
 
         # Add "leyendasFisc:Leyenda" attribs as new row
         if nodo.tag.endswith('Leyenda'):
-            fila['Leyenda']             = nodo.attrib.get('textoLeyenda', '')
+            fila['Leyenda']                 = nodo.attrib.get('textoLeyenda', '')
 
         # Add "implocal:ImpuestosLocales" attribs as new row
         if nodo.tag.endswith('ImpuestosLocales'):
@@ -130,12 +126,12 @@ def cfdi_row(nodo, fila, filename, option, rfc):
 
         # Add "cfdi:TimbreFiscalDigital" attribs as new row
         if nodo.tag.endswith('TimbreFiscalDigital'):
-            fila['Fecha Timbrado']      = nodo.attrib.get('FechaTimbrado', '')
-            fila['UUID']                = nodo.attrib.get('UUID', '')
+            fila['Fecha Timbrado']          = nodo.attrib.get('FechaTimbrado', '')
+            fila['UUID']                    = nodo.attrib.get('UUID', '')
             # call to the data stored in the json generated in the sorter
-            estado_sat, fecha_consulta  = set_sat_status(nodo.attrib.get('UUID', ''), option, rfc)
-            fila['Estado SAT']          = estado_sat
-            fila['Fecha Consulta']      = fecha_consulta
+            estado_sat, fecha_consulta      = set_sat_status(nodo.attrib.get('UUID', ''), option, rfc)
+            fila['Estado SAT']              = estado_sat
+            fila['Fecha Consulta']          = fecha_consulta
         
         # Add "cfdi:TimbreFiscalDigital" attribs as new row
         if nodo.tag.endswith('Pagos'):
@@ -170,10 +166,10 @@ def cfdi_row(nodo, fila, filename, option, rfc):
                 fila['Lista de Pagos']      = json.dumps(payment_list)
             
             
-            fila['Fecha Pago']          = nodo.attrib.get('FechaPago'   , '')
-            fila['Moneda Pago']         = nodo.attrib.get('MonedaP'     , '')
-            fila['Tipo Cambio']         = nodo.attrib.get('TipoCambioP' , '')
-            fila['Monto UUID Relac']    = nodo.attrib.get('Monto' , '')
+            fila['Fecha Pago']              = nodo.attrib.get('FechaPago'   , '')
+            fila['Moneda Pago']             = nodo.attrib.get('MonedaP'     , '')
+            fila['Tipo Cambio']             = nodo.attrib.get('TipoCambioP' , '')
+            fila['Monto UUID Relac']        = nodo.attrib.get('Monto' , '')
 
         # Add "cfdi:TimbreFiscalDigital" attribs as new row
         if nodo.tag.endswith('TrasladoDR'):

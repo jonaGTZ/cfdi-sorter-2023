@@ -9,7 +9,6 @@ from set_sat_status import set_sat_status
 
 def cfdi_payroll_row(nodo, fila, filename, option, rfc):
     try:
-
         emisor      = '{http://www.sat.gob.mx/cfd/3}Emisor'
         receptor    = '{http://www.sat.gob.mx/cfd/3}Receptor'
 
@@ -19,20 +18,16 @@ def cfdi_payroll_row(nodo, fila, filename, option, rfc):
             fila['Fecha Emision']           = nodo.attrib.get('Fecha'              , '')
             fila['Serie']                   = nodo.attrib.get('Serie'              , '')
             fila['Folio']                   = nodo.attrib.get('Folio'              , '')
-            
             fila['Tipo Comprobante']        = nodo.attrib.get('TipoDeComprobante'  , '')
             fila['Tipo']                    = 'Nomina'
             fila['Metodo Pago']             = nodo.attrib.get('MetodoPago'         , '')
             fila['Subtotal']                = nodo.attrib.get('SubTotal'           , '')
             fila['Descuento']               = nodo.attrib.get('Descuento'          , '')
-
             fila['Total']                   = nodo.attrib.get('Total'              , '')
             fila['Moneda']                  = nodo.attrib.get('Moneda'             , '')
             fila['Tipo de Cambio']          = nodo.attrib.get('TipoCambio'         , '')
-
             fila['CP Emisor']               = nodo.attrib.get('LugarExpedicion'    , '')
             fila['Moneda']                  = nodo.attrib.get('Moneda'             , '')
-            
             fila['Sello']                   = nodo.attrib.get('Sello'              , '')
             fila['No Certificado']          = nodo.attrib.get('NoCertificado'      , '')
             fila['Certificado']             = nodo.attrib.get('Certificado'        , '')
@@ -84,7 +79,7 @@ def cfdi_payroll_row(nodo, fila, filename, option, rfc):
                 }
                 concept_list.append(concept_data)
             # Add the list of concepts to the main dictionary
-            fila['Lista de Conceptos']      = json.dumps(concept_list)
+            fila['Lista de Conceptos']      = json.dumps(concept_list, ensure_ascii=False).encode('utf-8')
             fila['Objeto Impuesto']         = nodo.attrib.get('ObjetoImp'               , '')
 
         # Add "cfdi:TimbreFiscalDigital" attribs as new row
@@ -133,7 +128,7 @@ def cfdi_payroll_row(nodo, fila, filename, option, rfc):
             fila['CuentaBancaria']          = nodo.attrib.get('CuentaBancaria'          , '')
             fila['Salario Base Cotiz']      = nodo.attrib.get('SalarioBaseCotApor'      , '')
             fila['SDI']                     = nodo.attrib.get('SalarioDiarioIntegrado'  , '')
-            fila['Clave Entidad']          = nodo.attrib.get('ClaveEntFed'              , '')
+            fila['Clave Entidad']           = nodo.attrib.get('ClaveEntFed'              , '')
             fila['CuentaBancaria']          = nodo.attrib.get('CuentaBancaria'          , '')
             #
 
@@ -168,9 +163,8 @@ def cfdi_payroll_row(nodo, fila, filename, option, rfc):
         # Add "nomina12:SubsidioAlEmpleo" attribs as new row
         if nodo.tag.endswith("http://www.sat.gob.mx/nomina12}SubsidioAlEmpleo"):
             fila['SPE causado']             = nodo.attrib.get('SubsidioCausado'         , '')
-
-        return fila
     
     except Exception as e:
-            print(f'R01: {e} {nodo.tag} \n {filename}')
-            pass
+        raise Exception(f'R01: {e} {nodo.tag} \n {filename}')
+    
+    return fila
