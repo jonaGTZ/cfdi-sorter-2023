@@ -25,10 +25,22 @@ def get_dir_path_data(option, rfc):
     }
     return dirs.get(option)
 
+def set_json_template(option):
+    # calls the specific path of the json
+    dirs = {
+        'AYUDAS'        : '',
+        'INGRESO'       : '',
+        'NOMINA'        : '',
+        'PAGO_E'        : '',
+        'DES_BON_DEV'   : '',
+        'GASTO'         : '',
+        'PAGO_R'        : ''
+    }
+    return dirs.get(option)
+
 def cfdi_to_dict(option, rfc):
     # Define the path of cfdi's dir 
     dirpath     = get_dir_path_data(option, rfc)
-    
     filas       = []
     
     try:
@@ -47,19 +59,14 @@ def cfdi_to_dict(option, rfc):
                     
                     # Create a columns for the current file
                     try:
-                        if option == "NOMINA":
-                            with open('payroll-columns.json', encoding='utf-8') as f:
-                                fila = json.load(f)
-                                for nodo in arbol.iter():
-                                    fila = cfdi_payroll_row(nodo, fila, filename, option, rfc)
-                        else:
-                            with open('cfdi-colums.json', encoding='utf-8') as f:
-                                fila = json.load(f)
-                                for nodo in arbol.iter():
-                                    try:
-                                        fila = cfdi_row(nodo, fila, filename, option, rfc)
-                                    except:
-                                        raise Exception(f'E2: an error occurred filling the dictionary {filename}')
+                        with open(set_json_template(option), encoding='utf-8') as f:
+                            fila = json.load(f)
+
+                        for nodo in arbol.iter():
+                            try:
+                                fila = cfdi_row(nodo, fila, filename, option, rfc)
+                            except:
+                                raise Exception(f'E2: an error occurred filling the dictionary {filename}')                
                     except:
                         raise Exception(f'E3: Impossible to get xlsx columns: {filename}')
                     

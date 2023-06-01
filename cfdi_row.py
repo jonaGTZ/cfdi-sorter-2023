@@ -165,7 +165,6 @@ def cfdi_row(nodo, fila, filename, option, rfc):
                     
                 fila['Lista de Pagos']      = json.dumps(payment_list)
             
-            
             fila['Fecha Pago']              = nodo.attrib.get('FechaPago'   , '')
             fila['Moneda Pago']             = nodo.attrib.get('MonedaP'     , '')
             fila['Tipo Cambio']             = nodo.attrib.get('TipoCambioP' , '')
