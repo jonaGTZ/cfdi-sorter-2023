@@ -35,7 +35,17 @@
 	"CP Receptor":"",
 	"Regimen Fiscal Receptor":"",
 	"Uso CFDI":"",
-	"ClaveProdServ/ NoIdentificacion/ Cantidad/ Clave Unidad/ Unidad/ Descripcion/ Valor Unitario/ Importe/ Descuento":"",
+	"Lista de Conceptos":[{
+        "ClaveProdServ":"",
+        "NoIdentificacion":"",
+        "Cantidad":"",
+        "Clave Unidad":"",
+        "Unidad":"",
+        "Descripcion":"",
+        "Valor Unitario":"",
+        "Importe":"",
+        "Descuento":""
+    }],
 	"Objeto Impuesto":"",
 	"Total Retenciones Locales":"",
 	"Total Imp Retenidos":"",
