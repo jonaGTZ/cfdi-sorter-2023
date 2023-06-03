@@ -96,11 +96,7 @@ def cfdi_sorter(rfc, directory):
             # Check if emisor, receptor, tipo, and metodo_pago are not None
             if emisor is None or receptor is None or tipo is None:
                 raise Exception(f"E2: {filename} does not meet the requirements of the CFDI sorter standard.")
-
             
-            """ """
-
-
             # get SAT status
             sat_status = 'Cancelado'
             try:
