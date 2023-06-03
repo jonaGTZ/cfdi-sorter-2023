@@ -82,10 +82,9 @@ def cfdi_sorter(rfc, directory):
             if uuid in uuids_set:
                 try:
                     os.makedirs(os.path.join(rfc, err_directory, 'Duplicados'))
-                except FileExistsError :                    
                     shutil.copy(filename, os.path.join(rfc, err_directory, 'Duplicados', os.path.basename(filename)))
-                    print(f"E1: {uuid} already exists.")
-                    continue
+                except FileExistsError :                    
+                    raise FileExistsError(f"E1: {uuid} already exists.")
 
             # Add the UUID to the set
             uuids_set.add(uuid)
@@ -97,7 +96,7 @@ def cfdi_sorter(rfc, directory):
             # Check if emisor, receptor, tipo, and metodo_pago are not None
             if emisor is None or receptor is None or tipo is None:
                 raise Exception(f"E2: {filename} does not meet the requirements of the CFDI sorter standard.")
-
+            
             # get SAT status
             sat_status = 'Cancelado'
             try:
@@ -153,9 +152,12 @@ def cfdi_sorter(rfc, directory):
 
             # Copy the XML file to the appropriate sub-subdirectory
             shutil.copy(filename, os.path.join(rfc, sub_subdirectory, os.path.basename(filename)))
-
+        
+        except FileExistsError:
+            shutil.copy(filename, os.path.join(rfc, err_directory, 'Duplicados', os.path.basename(filename)))
+            
         except Exception as e:
-            print(f"{e}")
+            print(f"{filename} : {e}")
             try:
                 os.makedirs(os.path.join(rfc, err_directory))
             except FileExistsError :
@@ -163,25 +165,31 @@ def cfdi_sorter(rfc, directory):
             shutil.copy(filename, os.path.join(rfc, err_directory, os.path.basename(filename)))
             continue
     try:
-        with open(f'{rfc}_ingreso.json', 'a') as file:
+        
+        carpeta_status = f'{rfc}/status'
+
+        if not os.path.exists(carpeta_status):
+            os.makedirs(carpeta_status)
+
+        with open(f'{carpeta_status}/INGRESO.json', 'a') as file:
             json.dump(ingresos_dict, file, indent=4)
 
-        with open(f'{rfc}_gastos.json', 'a') as file:
+        with open(f'{carpeta_status}/GASTO.json', 'a') as file:
             json.dump(gastos_dict, file, indent=4)
 
-        with open(f'{rfc}_ayudas.json', 'a') as file:
+        with open(f'{carpeta_status}/AYUDAS.json', 'a') as file:
             json.dump(ayudas_dict, file, indent=4)
 
-        with open(f'{rfc}_des_bon_dev.json', 'a') as file:
+        with open(f'{carpeta_status}/DES_BON_DEV.json', 'a') as file:
             json.dump(des_bon_dev_dict, file, indent=4)
 
-        with open(f'{rfc}_nomina.json', 'a') as file:
+        with open(f'{carpeta_status}/NOMINA.json', 'a') as file:
             json.dump(nomina_dict, file, indent=4)
 
-        with open(f'{rfc}_pagosE.json', 'a') as file:
+        with open(f'{carpeta_status}/PAGO_E.json', 'a') as file:
             json.dump(pagosE_dict, file, indent=4)
 
-        with open(f'{rfc}_pagosR.json', 'a') as file:
+        with open(f'{carpeta_status}/PAGO_R.json', 'a') as file:
             json.dump(pagosR_dict, file, indent=4)
 
     except (FileExistsError, Exception) as e:

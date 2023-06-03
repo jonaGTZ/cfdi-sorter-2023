@@ -10,8 +10,7 @@ import json
 
 from lxml               import etree
 from datetime           import datetime
-from cfdi_row           import cfdi_row 
-from cfdi_payroll_row   import cfdi_payroll_row
+from cfdi_row_collector import cfdi_row_collector
 
 def get_dir_path_data(option, rfc):
     dirs = {
@@ -25,10 +24,22 @@ def get_dir_path_data(option, rfc):
     }
     return dirs.get(option)
 
+def get_columns_template(option):
+    dirs = {
+        'AYUDAS'        : 'xlsx_report_template/help-columns.json',
+        'INGRESO'       : 'xlsx_report_template/income-columns.json',
+        'NOMINA'        : 'xlsx_report_template/payroll-columns.json',
+        'PAGO_E'        : 'xlsx_report_template/payment-columns.json',
+        'DES_BON_DEV'   : 'xlsx_report_template/dis-reb-ref-columns.json',
+        'GASTO'         : 'xlsx_report_template/expense-columns.json',
+        'PAGO_R'        : 'xlsx_report_template/payment-columns.json'
+    }
+    return dirs.get(option)
+
 def cfdi_to_dict(option, rfc):
+
     # Define the path of cfdi's dir 
     dirpath     = get_dir_path_data(option, rfc)
-    
     filas       = []
     
     try:
@@ -47,19 +58,13 @@ def cfdi_to_dict(option, rfc):
                     
                     # Create a columns for the current file
                     try:
-                        if option == "NOMINA":
-                            with open('payroll-columns.json', encoding='utf-8') as f:
-                                fila = json.load(f)
-                                for nodo in arbol.iter():
-                                    fila = cfdi_payroll_row(nodo, fila, filename, option, rfc)
-                        else:
-                            with open('cfdi-colums.json', encoding='utf-8') as f:
-                                fila = json.load(f)
-                                for nodo in arbol.iter():
-                                    try:
-                                        fila = cfdi_row(nodo, fila, filename, option, rfc)
-                                    except:
-                                        raise Exception(f'E2: an error occurred filling the dictionary {filename}')
+                        with open(get_columns_template(option), encoding='utf-8') as f:
+                            fila = json.load(f)
+                            for nodo in arbol.iter():
+                                try:
+                                    fila = cfdi_row_collector(nodo, fila, filename, option, rfc)
+                                except:
+                                    raise Exception(f'E2: an error occurred filling the dictionary {filename}')
                     except:
                         raise Exception(f'E3: Impossible to get xlsx columns: {filename}')
                     
@@ -68,7 +73,7 @@ def cfdi_to_dict(option, rfc):
 
                     # Add the row to the list of rows
                     filas.append(fila)
-
+                # break #
         return filas, dirpath
     
     except Exception as e:
@@ -77,6 +82,7 @@ def cfdi_to_dict(option, rfc):
 
 def dict_to_xlsx(option, rfc):
     try:
+        # calls the cfdi_to_dict function that returns the address where to save the xlsx and the array of the cfdi data
         filas, dirpath = cfdi_to_dict(option, rfc)
 
         # Create a DataFrame from the list of rows
@@ -97,13 +103,16 @@ def dict_to_xlsx(option, rfc):
         for col_num, value in enumerate(df.columns.values):
             worksheet.write(0, col_num, value, header_format)
 
-        # # Set the column widths to auto-fit
-        # for i, col in enumerate(df.columns):
-        #     column_width = max(df[col].astype(str).map(len).max(), len(col))
-        #     worksheet.set_column(i, i, column_width)
-
         # Save the Excel file
         writer.close()
+
+        # # after using the status dictionary it is removed
+        # template_status_path = f'{rfc}/status/{option}.json'
+        # if os.path.exists(template_status_path):
+        #     os.remove(template_status_path)
+        #     print("SAT state dictionary cleared successfully")
+
     except Exception as e:
         print(f'E4: {e}')
         pass
+
