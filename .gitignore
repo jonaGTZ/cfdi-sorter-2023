@@ -1,26 +1,24 @@
-# BORRAR
-prueba.py
-xml_data
-
 # skip dir
+
+xmldata/
+__MACOSX/
+
 Clientes/
 MAP850101324/
+MAP850101324_status/
 MCM8501012U0/
+MCM8501012U0_status/
 MHS850101F67/
+MHS850101F67_status/
 MOP850101NX1/
+MOP850101NX1_status/
 MTR9302155L8/
+MTR9302155L8_status/
+
 .vscode/
-xml_new_data/
 xlsx_report_template/
 
 # JSON municipality
-MAP850101324_ayudas.json
-MAP850101324_des_bon_dev.json
-MAP850101324_gastos.json
-MAP850101324_ingreso.json
-MAP850101324_nomina.json
-MAP850101324_pagosE.json
-MAP850101324_pagosR.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

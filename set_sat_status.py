@@ -11,13 +11,13 @@ import json
 
 def get_file(option, rfc):
     dirs = {
-        'AYUDAS'        : f'{rfc}_ayudas.json',
-        'INGRESO'       : f'{rfc}_ingreso.json',
-        'NOMINA'        : f'{rfc}_nomina.json',
-        'PAGO_E'        : f'{rfc}_pagosE.json',
-        'DES_BON_DEV'   : f'{rfc}_des_bon_dev.json',
-        'GASTO'         : f'{rfc}_gastos.json',
-        'PAGO_R'        : f'{rfc}_pagosR.json'
+        'AYUDAS'        : f'{rfc}/status/AYUDAS.json',
+        'INGRESO'       : f'{rfc}/status/INGRESO.json',
+        'NOMINA'        : f'{rfc}/status/NOMINA.json',
+        'PAGO_E'        : f'{rfc}/status/PAGO_E.json',
+        'DES_BON_DEV'   : f'{rfc}/status/DES_BON_DEV.json',
+        'GASTO'         : f'{rfc}/status/GASTO.json',
+        'PAGO_R'        : f'{rfc}/status/PAGO_R.json'
     }
     return dirs.get(option)
 

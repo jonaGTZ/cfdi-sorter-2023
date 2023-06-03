@@ -7,7 +7,6 @@
 # Description:      [Brief description of the purpose of the script]
 
 import requests.exceptions
-import json
 
 
 from cfdiclient import Validacion
@@ -23,6 +22,6 @@ def get_sat_status(rfc_sender, rfc_receiver, total, uuid):
             status = validation.obtener_estado(rfc_sender, rfc_receiver, total, uuid)
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
             print(f'{e}')
-            continue
+            return 'Cancelado'
 
     return status.get('estado')

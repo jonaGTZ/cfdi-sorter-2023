@@ -10,7 +10,7 @@ import json
 
 from lxml               import etree
 from datetime           import datetime
-from cfdi_row_collector           import cfdi_row_collector
+from cfdi_row_collector import cfdi_row_collector
 
 def get_dir_path_data(option, rfc):
     dirs = {
@@ -40,7 +40,6 @@ def cfdi_to_dict(option, rfc):
 
     # Define the path of cfdi's dir 
     dirpath     = get_dir_path_data(option, rfc)
-    
     filas       = []
     
     try:
@@ -74,7 +73,7 @@ def cfdi_to_dict(option, rfc):
 
                     # Add the row to the list of rows
                     filas.append(fila)
-                    
+                # break #
         return filas, dirpath
     
     except Exception as e:
@@ -83,6 +82,7 @@ def cfdi_to_dict(option, rfc):
 
 def dict_to_xlsx(option, rfc):
     try:
+        # calls the cfdi_to_dict function that returns the address where to save the xlsx and the array of the cfdi data
         filas, dirpath = cfdi_to_dict(option, rfc)
 
         # Create a DataFrame from the list of rows
@@ -103,18 +103,16 @@ def dict_to_xlsx(option, rfc):
         for col_num, value in enumerate(df.columns.values):
             worksheet.write(0, col_num, value, header_format)
 
-        # # Set the column widths to auto-fit
-        # for i, col in enumerate(df.columns):
-        #     column_width = max(df[col].astype(str).map(len).max(), len(col))
-        #     worksheet.set_column(i, i, column_width)
-
         # Save the Excel file
         writer.close()
+
+        # # after using the status dictionary it is removed
+        # template_status_path = f'{rfc}/status/{option}.json'
+        # if os.path.exists(template_status_path):
+        #     os.remove(template_status_path)
+        #     print("SAT state dictionary cleared successfully")
+
     except Exception as e:
         print(f'E4: {e}')
         pass
 
-if __name__ == '__main__':
-    # Code that is executed when the script is called directly
-    dict_to_xlsx('NOMINA', 'MAP850101324')
-    pass
