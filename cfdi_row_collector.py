@@ -102,8 +102,11 @@ def cfdi_row_collector(node, row, filename, option, rfc):
 
                     # Add "implocal:ImpuestosLocales" attribs as new row
                     if node.tag.endswith('ImpuestosLocales'):
-                        row['Total Retenciones Locales']   = node.attrib.get('TotaldeRetenciones'          , '')
-                        row['Total Traslados']             = node.attrib.get('TotaldeTraslados'            , '')
+                        # row['Total Retenciones Locales']   = node.attrib.get('TotaldeRetenciones'        , '')
+                        # row['Total Traslados']             = node.attrib.get('TotaldeTraslados'          , '')
+                        row['Imp Local Retenido']          = node.attrib.get('ImpLocRetenido'              , '')
+                        row['Tasa Imp Local Retenido']     = node.attrib.get('TasadeRetencion'             , '')
+                        row['Importe Imp Local Retenido']  = node.attrib.get('Importe'                     , '')
 
                     # Add "cfdi:Impuestos" attribs as new row 
                     if node.tag.endswith('Impuestos'):
@@ -223,41 +226,38 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                         row['Lista de Conceptos']          = json.dumps(concept_list, ensure_ascii=False)
                         row['Objeto Impuesto']             = node.attrib.get('ObjetoImp', '')
 
-                    # Add "cfdi:Traslado" attribs as new row
+                    # Add "cfdi:Retenciones" attribs as new row
+                    if node.tag.endswith('Retenciones'):
+                        # set child node to parse 
+                        transfers = node.xpath('//cfdi:Retenciones/cfdi:Retencion', namespaces=node.nsmap)
+
+                        # Iterate over the cfdi:Retenciones elements and add their data to the dictionary
+                        for transfer in transfers:
+                            if   transfer.get('Impuesto') == "001":
+                                row['Retención ISR']             = node.attrib.get('Importe', '')
+
+                            elif transfer.get('Impuesto') == "002":
+                                row['Retención IVA']             = node.attrib.get('Importe', '')
+
+                            elif transfer.get('Impuesto') == "003":
+                                row['Retención IEPS']             = node.attrib.get('Importe', '')
+
+                    # Add "cfdi:Traslado" attribs as new row 
+                    # subnode on "cfdi:Impuestos"
                     if node.tag.endswith('Traslado'):
-                        # Create an empty dictionary to store the Transfer data, set child node to parse 
-                        # isr_list  = []
-                        iva_list  = []
-                        ieps_list = []
+                        # set child node to parse 
                         transfers = node.xpath('//cfdi:Traslados/cfdi:Traslado', namespaces=node.nsmap)
                         
                         # Iterate over the cfdi:Traslado elements and add their data to the dictionary
                         for transfer in transfers:
-                            # if   transfer.get('Impuesto') == "001":
-                            #     isr_data = {
-                            #         'ISR': transfer.get('Importe'   , ''),
-                            #         'Retención ISR': transfer.get('TasaOCuota'   , ''),
-                                    
-                            #     }
-                            #     isr_list.append(json.loads(json.dumps(isr_data, ensure_ascii=False)))
+                            if   transfer.get('Impuesto') == "001":
+                                row['ISR']      = node.attrib.get('Importe', '')
 
-                            if   transfer.get('Impuesto') == "002":
-                                iva_data = {
-                                    'IVA 16%': transfer.get('Importe'   , ''),
-                                    'Retención IVA': transfer.get('TasaOCuota'   , ''),
-                                }
-                                iva_list.append(json.loads(json.dumps(iva_data, ensure_ascii=False)))
+                            elif transfer.get('Impuesto') == "002":
+                                row['IVA 16%']  = node.attrib.get('Importe', '')
 
                             elif transfer.get('Impuesto') == "003":
-                                ieps_data = {
-                                    'IEPS': transfer.get('Importe'   , ''),
-                                }
-                                ieps_list.append(json.loads(json.dumps(ieps_data, ensure_ascii=False)))
-
-                        # Add the list of concepts to the main dictionary
-                        #row['ISR']           = json.dumps(isr_list, ensure_ascii=False)
-                        row['IVA 16%']        = json.dumps(iva_list, ensure_ascii=False)
-                        row['IEPS']           = json.dumps(ieps_list, ensure_ascii=False)
+                                row['IEPS']     = node.attrib.get('Importe', '')
                     
                     # Add "cfdi:Pagos" attribs as new row
                     if node.tag.endswith('Pagos'):
