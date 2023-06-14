@@ -31,13 +31,20 @@ option_mapping = {
 }
 
 def cfdi_row_collector(node, row, filename, option, rfc):
+
+    emisor      = ''
+    receptor    = ''
+    
+    if node.tag.endswith('Comprobante'):
+        if node.attrib.get('Version') == '4.0':
+            emisor      = '{http://www.sat.gob.mx/cfd/4}Emisor'
+            receptor    = '{http://www.sat.gob.mx/cfd/4}Receptor'
+    
     if option in option_mapping:
         keys_to_add = option_mapping[option]
         for key in keys_to_add:
             if key in row:
                 try:
-                    emisor      = '{http://www.sat.gob.mx/cfd/3}Emisor'
-                    receptor    = '{http://www.sat.gob.mx/cfd/3}Receptor'
                     # Add "cfdi:Comprobante" node as new column
                     if node.tag.endswith('Comprobante'):
                         row['Version']                     = node.attrib.get('Version'                     , '')
@@ -64,9 +71,7 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                         row['Certificado']                 = node.attrib.get('Certificado'                 , '')
                         if option == 'DES_BON_DEV' or option == 'GASTO':
                             row['Condiciones Pago']            = node.attrib.get('CondicionesDePago'           , '')
-                        if node.attrib.get('Version') == '4.0':
-                            emisor      = '{http://www.sat.gob.mx/cfd/4}Emisor'
-                            receptor    = '{http://www.sat.gob.mx/cfd/4}Receptor'
+                        
                     
                     # Add "cfdi:InformacionGlobal" attribs as new row
                     if node.tag.endswith('InformacionGlobal'):
@@ -83,19 +88,29 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                         row['UUID Relacion']               = node.attrib.get('UUID'                        , '')
                     
                     # Add "cfdi:Emisor" attribs as new row
-                    if node.tag.endswith(f'{emisor}'):
+                    if node.tag.endswith('{http://www.sat.gob.mx/cfd/3}Emisor'):
+                        row['RFC Emisor']                  = node.attrib.get('Rfc'                         , '')
+                        row['Nombre Emisor']               = node.attrib.get('Nombre'                      , '')
+                        row['Regimen Fiscal Emisor']       = node.attrib.get('RegimenFiscal'               , '')
+                    elif node.tag.endswith('{http://www.sat.gob.mx/cfd/4}Emisor'):
                         row['RFC Emisor']                  = node.attrib.get('Rfc'                         , '')
                         row['Nombre Emisor']               = node.attrib.get('Nombre'                      , '')
                         row['Regimen Fiscal Emisor']       = node.attrib.get('RegimenFiscal'               , '')
 
                     # Add "cfdi:Receptor" attribs as new row
-                    if node.tag.endswith(f'{receptor}'):
+                    if node.tag.endswith('{http://www.sat.gob.mx/cfd/3}Receptor'):
                         row['RFC Receptor']                = node.attrib.get('Rfc'                         , '')
                         row['Nombre Receptor']             = node.attrib.get('Nombre'                      , '')
                         row['CP Receptor']                 = node.attrib.get('DomicilioFiscalReceptor'     , '')
                         row['Regimen Fiscal Receptor']     = node.attrib.get('RegimenFiscalReceptor'       , '')
                         row['Uso CFDI']                    = node.attrib.get('UsoCFDI'                     , '')
-                    
+                    elif node.tag.endswith('{http://www.sat.gob.mx/cfd/4}Receptor'):
+                        row['RFC Receptor']                = node.attrib.get('Rfc'                         , '')
+                        row['Nombre Receptor']             = node.attrib.get('Nombre'                      , '')
+                        row['CP Receptor']                 = node.attrib.get('DomicilioFiscalReceptor'     , '')
+                        row['Regimen Fiscal Receptor']     = node.attrib.get('RegimenFiscalReceptor'       , '')
+                        row['Uso CFDI']                    = node.attrib.get('UsoCFDI'                     , '')
+
                     # Add "leyendasFisc:Leyenda" attribs as new row
                     if node.tag.endswith('Leyenda'):
                         row['Leyenda']                     = node.attrib.get('textoLeyenda'                , '')
@@ -299,6 +314,7 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                 # understand that the exception that is handled is for cases where fila[row name] does not exist
                 except Exception as e:
                     continue
+            break
     else:
         raise Exception(f'{e} \nfilename: {filename}')
     
