@@ -15,9 +15,8 @@ MOP850101NX1_status/
 MTR9302155L8/
 MTR9302155L8_status/
 
-.vscode/
-xlsx_report_template/
-
+.vscode/ 
+PRUEBA/
 # JSON municipality
 
 # Byte-compiled / optimized / DLL files

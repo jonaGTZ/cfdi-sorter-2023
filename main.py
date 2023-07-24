@@ -92,7 +92,7 @@ def select_algorithm(rfc):
 
         if opcion == '1':
             print(f"{rfc} : Sort the xml by type of receipt and methot of payment in progress")
-            cfdi_sorter(rfc, f'Clientes/{rfc[0:3]}/')
+            cfdi_sorter(rfc, f'PRUEBA/{rfc[0:3]}/')
             input("Press Enter to return to the main menu...")
             break
         elif opcion == '2':
