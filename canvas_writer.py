@@ -36,11 +36,12 @@ def drawline(c, x, y, text):
     return y
 
 def draw_concept_table(c, rows, x, y, cfdi_tipo):
+    
     # obtain the height of the table | 18' is the size of each row
+    limit = len(rows) * 18
+    
     if cfdi_tipo == 'E':
-        limit = len(rows) * 21
-    else:    
-        limit = len(rows) * 18
+        limit = len(rows) * 21    
 
     data = [['ClaveProdServ', 'Cantidad', 'Unidad Medida', 'Descripción', 'Valor Unitario', 'Impuestos', 'Importe']]
 

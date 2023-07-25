@@ -10,10 +10,6 @@
 from reportlab.lib.styles           import getSampleStyleSheet
 from reportlab.platypus             import Paragraph
 
-def get_related_cfdi(docs):
-    # create a list comprehension to extract the required attributes of each node pago10:DoctoRelacionado
-    return [[doc.getAttribute('IdDocumento'), doc.getAttribute('Serie'), doc.getAttribute('Folio'), doc.getAttribute('ImpSaldoAnt'), doc.getAttribute('ImpPagado')] for doc in docs]
-
 def get_related_cfdi_table(rows, row_related_node):
     # define related cfdi table header instance
     table = []
@@ -57,25 +53,79 @@ def get_cfdi_concepts(docs):
     # return the list of attributes of the "cfdi:Concept" nodes
     return concepto_attrs_list
 
-def get_cfdi_concepts_table(receipt, concepts):
+def get_transfers(taxes):
+    # receives the cfdi:Impuestos node, to parse its content and collect transfers
+    transfer_list = {}
+    try:
+        transfers = taxes.getElementsByTagName('cfdi:Traslado')
+    except AttributeError:
+        transfers = []
+    # relocates the value of the attributes in the dictionary transfer_list
+    for transfer in transfers:
+        try:
+            amount  = transfer.getAttribute('Importe')
+            tax     = transfer.getAttribute('Impuesto')
+            transfer_list[tax] = amount
+        except:
+            continue
+    return transfer_list
+
+def get_withholdings(taxes):
+    # receives the "cfdi:Impuestos" node, to parse its content and collect withholdings
+    withholdings_list = {}
+    try:
+        withholdings = taxes.getElementsByTagName('cfdi:Retencion')
+    except AttributeError:
+        withholdings = []
+
+    # relocates the value of the attributes in the dictionary withholdings_list
+    for withholding in withholdings:
+        try:
+            amount  = withholding.getAttribute('Importe')
+            tax     = withholding.getAttribute('Impuesto')
+            withholdings_list[tax] = amount
+        except:
+            continue
+    return withholdings_list
+
+def get_cfdi_concepts_table(receipt, concepts, taxes, type):
+    # remaps the contents of the dictionary to use its values for each tax
+    transfers       = get_transfers(taxes)
+    withholdings    = get_withholdings(taxes)
+
     # definition of attributes to build the part of totals and taxes of the table of concepts
-    subtotal = '{:.2f}'.format(float(receipt[0].getAttribute('SubTotal')))
-    discount = receipt[0].getAttribute('Descuento') or '0.00'
-    ieps = '0.00'
-    ret_iva = '{:.2f}'.format(round(float(receipt[0].getAttribute('Total')) * .16, 2))
-    ret_isr = '{:.2f}'.format(round(float(receipt[0].getAttribute('Total')) * .16, 2))
-    iva = '{:.2f}'.format(round(float(receipt[0].getAttribute('Total')) * .10666666, 2))
-    total = '{:.2f}'.format(float(receipt[0].getAttribute('Total')))
+    subtotal        = '{:.2f}'.format(float(receipt[0].getAttribute('SubTotal')))
+    discount        = receipt[0].getAttribute('Descuento') or '0.00'
+    total           = '{:.2f}'.format(float(receipt[0].getAttribute('Total')))
+    isr             = '0.00' 
+    iva             = '0.00'
+    ieps            = '0.00'
+    ret_iva         = '0.00'
+    ret_isr         = '0.00'
     
+    # assign tax to its corresponding variable
+    if '001' in transfers:
+        isr     = '{:.2f}'.format(round(float(transfers['001']), 2))
+    if '002' in transfers:
+        iva     = '{:.2f}'.format(round(float(transfers['002']), 2))
+    if '003' in transfers:
+        ieps    = '{:.2f}'.format(round(float(transfers['003']), 2))
+        
+    if '001' in withholdings: 
+        ret_isr = '{:.2f}'.format(round(float(withholdings['001']), 2))
+    if '002' in withholdings:
+        ret_iva = '{:.2f}'.format(round(float(withholdings['002']), 2))
+
     # define header instance, totals and taxes from cfdi table concepts
     table = [
-        ['', '', '', '', '', '  SubTotal $', subtotal],
+        ['', '', '', '', '', '  SubTotal $' , subtotal],
         ['', '', '', '', '', '- Descuento $', discount],
-        ['', '', '', '', '', '+ IEPS $', ieps],
-        ['', '', '', '', '', '+ IVA 16% $', iva],
+        ['', '', '', '', '', '+ IEPS $'     , ieps],
+        ['', '', '', '', '', '+ IEPS $'     , isr],
+        ['', '', '', '', '', '+ IVA 16% $'  , iva],
         ['', '', '', '', '', '- Ret __% ISR', ret_isr],
         ['', '', '', '', '', '- Ret __% IVA', ret_iva],
-        ['', '', '', '', '', '= Total $', total]
+        ['', '', '', '', '', '= Total $'    , total]
     ]
     
     concepts = get_cfdi_concepts(concepts.getElementsByTagName('cfdi:Concepto'))
@@ -85,10 +135,10 @@ def get_cfdi_concepts_table(receipt, concepts):
         table.insert(0, concept)
     
     # create a paragraph style object for the text in column "descripción"
-    styledesc = getSampleStyleSheet()['Normal']
-    styledesc.alignment = 0
-    styledesc.leading   = 6
-    styledesc.fontSize  = 5
+    styledesc           = getSampleStyleSheet()['Normal']
+    styledesc.alignment = 0     # concept alignment type
+    styledesc.leading   = 7     # size between each line break of the concept
+    styledesc.fontSize  = 7     # concept font size
     
     # split column "descripción" text into multiple lines
     for row in table[0:]:

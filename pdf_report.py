@@ -11,13 +11,13 @@ from amount_with_letter         import amount_with_letter
 from canvas_writer              import drawline, draw_concept_table, draw_related_table, drawrect, drawtittle, drawsubtittle, drawimage, drawQR
 from list_table_builder         import get_related_cfdi_table, get_cfdi_concepts_table
 # pdf build modules
-from reportlab.pdfgen          import canvas
-from reportlab.lib.styles      import ParagraphStyle
-from reportlab.lib.units       import inch
-from reportlab.lib.pagesizes   import letter
-from reportlab.platypus        import Paragraph
+from reportlab.pdfgen           import canvas
+from reportlab.lib.styles       import ParagraphStyle
+from reportlab.lib.units        import inch
+from reportlab.lib.pagesizes    import letter
+from reportlab.platypus         import Paragraph
 # directory parser modules
-from xml.dom                   import minidom
+from xml.dom                    import minidom
 import os
 
 def canvas_pdf_parser(filename, pdfname):
@@ -25,13 +25,19 @@ def canvas_pdf_parser(filename, pdfname):
     cfdi = minidom.parse(filename)
     
     # get cfdi nodes to build pdf with required data
-    cfdi_comprobante_node        = cfdi.getElementsByTagName('cfdi:Comprobante')
-    cfdi_emisor_node             = cfdi.getElementsByTagName('cfdi:Emisor')
-    cfdi_receptor_node           = cfdi.getElementsByTagName('cfdi:Receptor')
-    cfdi_nomina_node             = cfdi.getElementsByTagName('nomina12:Nomina')
-    cfdi_nomina_emisor_node      = cfdi.getElementsByTagName('nomina12:Emisor')
-    cfdi_nomina_receptor_node    = cfdi.getElementsByTagName('nomina12:Receptor')
-    cfdi_timbre_node             = cfdi.getElementsByTagName('tfd:TimbreFiscalDigital')
+    cfdi_comprobante_node       = cfdi.getElementsByTagName('cfdi:Comprobante')
+    cfdi_emisor_node            = cfdi.getElementsByTagName('cfdi:Emisor')
+    cfdi_receptor_node          = cfdi.getElementsByTagName('cfdi:Receptor')
+    cfdi_nomina_node            = cfdi.getElementsByTagName('nomina12:Nomina')
+    cfdi_nomina_emisor_node     = cfdi.getElementsByTagName('nomina12:Emisor')
+    cfdi_nomina_receptor_node   = cfdi.getElementsByTagName('nomina12:Receptor')
+    cfdi_timbre_node            = cfdi.getElementsByTagName('tfd:TimbreFiscalDigital')
+    # cfdi_Traslado_node          = cfdi.getElementsByTagName('cfdi:Traslados')
+    try:
+        cfdi_Impuestos_node = cfdi.getElementsByTagName('cfdi:Impuestos')[-1]
+    except IndexError:
+        cfdi_Impuestos_node = None
+
 
     # 
     if cfdi_comprobante_node[0].getAttribute('Version') == '4.0':
@@ -202,7 +208,7 @@ def canvas_pdf_parser(filename, pdfname):
         y = drawline(c, x + 180, y, 'N/A')-12
 
     # draw the invoice or payroll concepts after generating the array that contains the table
-    concepts_rows = get_cfdi_concepts_table(cfdi_comprobante_node, cfdi_conceptos_node)
+    concepts_rows = get_cfdi_concepts_table(cfdi_comprobante_node, cfdi_conceptos_node, cfdi_Impuestos_node, cfdi_tipo)
     
     # draw the table at position (x, y)
     y = draw_concept_table(c, concepts_rows, x, y-12, cfdi_tipo)
@@ -283,11 +289,5 @@ def generate_pdf(rfc):
         try: 
             canvas_pdf_parser(filename, pdf_file)
         except Exception as e:
-            print(f'E1: Impossible to parse the tree: {filename}')
+            print(f'E1: Impossible to parse the tree: {filename} {e}')
             continue
-
-# Main script code
-if __name__ == '__main__':
-    # Code that is executed when the script is called directly
-    generate_pdf('MCM8501012U0')
-    pass
