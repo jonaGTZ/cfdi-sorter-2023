@@ -35,33 +35,29 @@ def drawline(c, x, y, text):
     c.drawString(x, y, text)
     return y
 
-def draw_concept_table(c, rows, x, y, cfdi_tipo):
-    
-    # obtain the height of the table | 18' is the size of each row
-    limit = len(rows) * 18
-    
-    if cfdi_tipo == 'E':
-        limit = len(rows) * 21    
+def draw_concept_table(c, rows, x, y):   
 
-    data = [['ClaveProdServ', 'Cantidad', 'Unidad Medida', 'Descripción', 'Valor Unitario', 'Impuestos', 'Importe']]
-
+    data            = [['ClaveProdServ', 'Cantidad', 'Unidad Medida', 'Descripción', 'Valor Unitario', 'Impuestos', 'Importe']]
+    
+    col_Widths      = [75, 45, 60, 200, 70, 75, 65]
+    table_height    = 18
+    
     # algorithm to lay the table in the PDF respectively at its height
-    if y <= 25:
+    if y <= 45:
         c.showPage()
         y = letter[1] - 25
     else: 
-        while limit > 0 and y > 25:
-            if rows:
+        while  y > 45:
+            try:
+                table_aux       = Table([rows[0]], col_Widths)
+                table_aux.wrapOn(None, inch, inch)
+                table_height    = table_aux._height
                 data.append(rows.pop(0))
-            if cfdi_tipo == 'E':
-                y -= 21
-                limit -= 21
-            else:
-                y -= 18
-                limit -= 18
+                y -= table_height
+            except: break
             
     # generate size and style of concept table
-    table = Table(data, colWidths=[75, 45, 60, 200, 70, 75, 65])
+    table = Table(data, col_Widths)
     table.setStyle(TableStyle([
         ('FONTNAME'  , (0,0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE'  , (0,0), (-1, 0), 8),
@@ -78,40 +74,49 @@ def draw_concept_table(c, rows, x, y, cfdi_tipo):
         table.drawOn(c, x, y)
 
     if rows:
-        y = draw_concept_table(c, rows, x, y, cfdi_tipo)
+        y = draw_concept_table(c, rows, x, y)
+
     return y
 
 def draw_related_table(c, rows, x, y):
+
+    data            = [['IdDocumento', 'Serie', 'Folio', 'ImpSaldoAnt', 'ImpPagado'],]
     
-    # obtain the height of the table | 18' is the size of each row (needs adjustment) 
-    limit = len(rows) * 18
-    data = [['IdDocumento', 'Serie', 'Folio', 'ImpSaldoAnt', 'ImpPagado'],]
+    col_Widths      =[260, 70, 70, 95, 95]
+    table_height    = 18
 
     # algorithm to lay the table in the PDF respectively at its height
-    if y <= 25:
+    if y <= 45:
         c.showPage()
         y = letter[1] - 25
     else: 
-        while limit > 0 and y > 25:
-            if rows:
+        while  y > 45:
+            try:
+                table_aux       = Table([rows[0]], col_Widths)
+                table_aux.wrapOn(None, inch, inch)
+                table_height    = table_aux._height
                 data.append(rows.pop(0))
-            y -= 18
-            limit -= 18
+                y -= table_height
+            except: break
     
     # generate size and style of concept table
-    table = Table(data, colWidths=[260, 70, 70, 95, 95])
+    table = Table(data, col_Widths)
     table.setStyle(TableStyle([
-            ('BACKGROUND', (0,0), (-1,0), colors.Color(0.447, 0.027, 0.027)),
-            ('TEXTCOLOR', (0,0), (-1,0), colors.white),
-            ('ALIGN', (0,0), (0,-1), 'CENTER'),
-            ('ALIGN', (0,0), (-1,-1), 'LEFT'),
-            ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0,0), (-1,0), 8)
+            ('BACKGROUND'   , (0,0), (-1, 0), colors.Color(0.447, 0.027, 0.027)),
+            ('TEXTCOLOR'    , (0,0), (-1, 0), colors.white),
+            ('ALIGN'        , (0,0), ( 0,-1), 'CENTER'),
+            ('ALIGN'        , (0,0), (-1,-1), 'LEFT'),
+            ('FONTNAME'     , (0,0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE'     , (0,0), (-1, 0), 8)
     ]))
-    table.wrapOn(c, inch, inch)
-    table.drawOn(c, x, y)
+
+    if table._nrows > 1:
+        table.wrapOn(c, inch, inch)
+        table.drawOn(c, x, y)
+
     if rows:
-        y = draw_related_table(c, rows, x, y)
+        y = draw_concept_table(c, rows, x, y)
+        
     return y
 
 def drawrect(c, x, y, w, h, f, s): 
@@ -168,3 +173,5 @@ def drawQR(c, x, y, url):
     # draw the QR code on the PDF file
     renderPDF.draw(d, c, x, y)
     return y
+
+ 

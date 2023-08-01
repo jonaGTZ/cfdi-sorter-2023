@@ -88,7 +88,7 @@ def get_withholdings(taxes):
             continue
     return withholdings_list
 
-def get_cfdi_concepts_table(receipt, concepts, taxes, type):
+def get_cfdi_concepts_table(receipt, concepts, taxes):
     # remaps the contents of the dictionary to use its values for each tax
     transfers       = get_transfers(taxes)
     withholdings    = get_withholdings(taxes)
@@ -121,7 +121,7 @@ def get_cfdi_concepts_table(receipt, concepts, taxes, type):
         ['', '', '', '', '', '  SubTotal $' , subtotal],
         ['', '', '', '', '', '- Descuento $', discount],
         ['', '', '', '', '', '+ IEPS $'     , ieps],
-        ['', '', '', '', '', '+ IEPS $'     , isr],
+        ['', '', '', '', '', '+ ISR $'     , isr],
         ['', '', '', '', '', '+ IVA 16% $'  , iva],
         ['', '', '', '', '', '- Ret __% ISR', ret_isr],
         ['', '', '', '', '', '- Ret __% IVA', ret_iva],
