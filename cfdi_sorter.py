@@ -25,7 +25,6 @@ ingresos_directory      = 'Ingresos'
 gastos_directory        = 'Gastos'
 ayudas_directory        = 'Ayudas'
 des_bon_dev_directory   = 'Descuento_Bonificaciones_Devoluciones'
-nomina_directory        = 'Nomina'
 pagosE_directory        = 'Pagos'
 pagosR_directory        = 'Pagos'
 
@@ -132,8 +131,14 @@ def cfdi_sorter(rfc, directory):
                 subdirectory = des_bon_dev_directory
                 des_bon_dev_dict[uuid] = [data]
             elif tipo == 'N' and emisor      == rfc:
-                subdirectory = nomina_directory
-                nomina_dict[uuid] = [data]
+                
+                tipo_nomina = root.find(".//{http://www.sat.gob.mx/nomina12}Nomina")
+                if tipo_nomina is not None:
+                    tipo_nomina     = tipo_nomina.attrib.get('TipoNomina', '')
+                nomina_directory    = f'Nomina/nomina_{tipo_nomina}'
+                subdirectory        = nomina_directory
+                nomina_dict[uuid]   = [data]
+
             elif tipo == 'P' and emisor      == rfc:
                 subdirectory = pagosE_directory
                 pagosE_dict[uuid] = [data]
@@ -193,4 +198,4 @@ def cfdi_sorter(rfc, directory):
             json.dump(pagosR_dict, file, indent=4)
 
     except (FileExistsError, Exception) as e:
-        raise ('ocurrio un error inesperado')    
+        raise ('ocurrio un error inesperado')

@@ -3,21 +3,22 @@
 
 # script header
 # Author:           [Hugo Berra Salazar, ]
-# Creation date:    [13/07/2023]
-# Description:      [Brief description of the purpose of the script]
+# Creation date:    [29/07/2023]
+# Description:      [proporciona una descripción más detallada en el pdf acerca de algunos de los atributos del CFDI]
 
 # local modules
 from amount_with_letter         import amount_with_letter
 from canvas_writer              import drawline, draw_concept_table, draw_related_table, drawrect, drawtittle, drawsubtittle, drawimage, drawQR
 from list_table_builder         import get_related_cfdi_table, get_cfdi_concepts_table
+from pdf_details                import get_tax_regime, get_cfdi_usage, get_payment_method, get_payment_form, get_cfdi_type
 # pdf build modules
-from reportlab.pdfgen          import canvas
-from reportlab.lib.styles      import ParagraphStyle
-from reportlab.lib.units       import inch
-from reportlab.lib.pagesizes   import letter
-from reportlab.platypus        import Paragraph
+from reportlab.pdfgen           import canvas
+from reportlab.lib.styles       import ParagraphStyle
+from reportlab.lib.units        import inch
+from reportlab.lib.pagesizes    import letter
+from reportlab.platypus         import Paragraph
 # directory parser modules
-from xml.dom                   import minidom
+from xml.dom                    import minidom
 import os
 
 def canvas_pdf_parser(filename, pdfname):
@@ -25,13 +26,18 @@ def canvas_pdf_parser(filename, pdfname):
     cfdi = minidom.parse(filename)
     
     # get cfdi nodes to build pdf with required data
-    cfdi_comprobante_node        = cfdi.getElementsByTagName('cfdi:Comprobante')
-    cfdi_emisor_node             = cfdi.getElementsByTagName('cfdi:Emisor')
-    cfdi_receptor_node           = cfdi.getElementsByTagName('cfdi:Receptor')
-    cfdi_nomina_node             = cfdi.getElementsByTagName('nomina12:Nomina')
-    cfdi_nomina_emisor_node      = cfdi.getElementsByTagName('nomina12:Emisor')
-    cfdi_nomina_receptor_node    = cfdi.getElementsByTagName('nomina12:Receptor')
-    cfdi_timbre_node             = cfdi.getElementsByTagName('tfd:TimbreFiscalDigital')
+    cfdi_comprobante_node       = cfdi.getElementsByTagName('cfdi:Comprobante')
+    cfdi_emisor_node            = cfdi.getElementsByTagName('cfdi:Emisor')
+    cfdi_receptor_node          = cfdi.getElementsByTagName('cfdi:Receptor')
+    cfdi_nomina_node            = cfdi.getElementsByTagName('nomina12:Nomina')
+    cfdi_nomina_emisor_node     = cfdi.getElementsByTagName('nomina12:Emisor')
+    cfdi_nomina_receptor_node   = cfdi.getElementsByTagName('nomina12:Receptor')
+    cfdi_timbre_node            = cfdi.getElementsByTagName('tfd:TimbreFiscalDigital')
+    # cfdi_Traslado_node          = cfdi.getElementsByTagName('cfdi:Traslados')
+    try:
+        cfdi_Impuestos_node = cfdi.getElementsByTagName('cfdi:Impuestos')[-1]
+    except IndexError:
+        cfdi_Impuestos_node = None
 
     # 
     if cfdi_comprobante_node[0].getAttribute('Version') == '4.0':
@@ -56,7 +62,7 @@ def canvas_pdf_parser(filename, pdfname):
     # define the start size and position of canva
     x = 10
     y = letter[1] - 25
-    
+
     # build the header, add the title, the folio, and the serial number to which the cfdi belongs
     drawrect(c, x, y - 18, 590, 35, True, 0)
     if cfdi_tipo == 'N': drawtittle(c, x + 240, y, 'RECIBO DE NÓMINA')
@@ -90,28 +96,28 @@ def canvas_pdf_parser(filename, pdfname):
     if cfdi_tipo == 'N':
         y = drawrect(c, x, y, 590, 20, True, 0)
         y = drawtittle(c, x+5, y + 6, 'DATOS DEL TRABAJADOR')
-        y = drawline(c, x +  40, y, 'Nombre:')
-        y = drawline(c, x + 130, y, cfdi_receptor_node[0].getAttribute('Nombre'))
-        y = drawline(c, x + 300, y, 'Núm. Nómina:')
-        y = drawline(c, x + 390, y, cfdi_emisor_node[0].getAttribute('RegimenFiscal'))-12
-        y = drawline(c, x +  40, y, 'Núm. Trabajador:')
-        y = drawline(c, x + 130, y, cfdi_nomina_receptor_node[0].getAttribute('NumEmpleado'))
-        y = drawline(c, x + 300, y, 'Departamento:')
-        y = drawline(c, x + 390, y, cfdi_nomina_receptor_node[0].getAttribute('Departamento'))-12
-        y = drawline(c, x +  40, y, 'CURP:')
-        y = drawline(c, x + 130, y, cfdi_nomina_receptor_node[0].getAttribute('Curp'))
-        y = drawline(c, x + 300, y, 'Puesto:')
-        y = drawline(c, x + 390, y, cfdi_nomina_receptor_node[0].getAttribute('Puesto'))-12
-        y = drawline(c, x +  40, y, 'RFC:')
-        y = drawline(c, x + 130, y, cfdi_receptor_node[0].getAttribute('Rfc'))
-        y = drawline(c, x + 300, y, 'Inicio relación lab:')
-        y = drawline(c, x + 390, y, cfdi_nomina_receptor_node[0].getAttribute('FechaInicioRelLaboral'))-12
-        y = drawline(c, x +  40, y, 'NSS:')
-        y = drawline(c, x + 130, y, cfdi_nomina_receptor_node[0].getAttribute('NumSeguridadSocial'))
-        y = drawline(c, x + 300, y, 'Periodo:')
-        y = drawline(c, x + 390, y, cfdi_nomina_receptor_node[0].getAttribute('PeriodicidadPago'))-12
-        y = drawline(c, x +  40, y, 'Domicilio Fiscal:')
-        y = drawline(c, x + 130, y, cfdi_comprobante_node[0].getAttribute('LugarExpedicion'))
+        y = drawline(c, x +  25, y, 'Nombre:')
+        y = drawline(c, x + 115, y, cfdi_receptor_node[0].getAttribute('Nombre'))
+        y = drawline(c, x + 315, y, 'Núm. Nómina:')
+        y = drawline(c, x + 405, y, cfdi_emisor_node[0].getAttribute('RegimenFiscal'))-12
+        y = drawline(c, x +  25, y, 'Núm. Trabajador:')
+        y = drawline(c, x + 115, y, cfdi_nomina_receptor_node[0].getAttribute('NumEmpleado'))
+        y = drawline(c, x + 315, y, 'Departamento:')
+        y = drawline(c, x + 405, y, cfdi_nomina_receptor_node[0].getAttribute('Departamento'))-12
+        y = drawline(c, x +  25, y, 'CURP:')
+        y = drawline(c, x + 115, y, cfdi_nomina_receptor_node[0].getAttribute('Curp'))
+        y = drawline(c, x + 315, y, 'Puesto:')
+        y = drawline(c, x + 405, y, cfdi_nomina_receptor_node[0].getAttribute('Puesto'))-12
+        y = drawline(c, x +  25, y, 'RFC:')
+        y = drawline(c, x + 115, y, cfdi_receptor_node[0].getAttribute('Rfc'))
+        y = drawline(c, x + 315, y, 'Inicio relación lab:')
+        y = drawline(c, x + 405, y, cfdi_nomina_receptor_node[0].getAttribute('FechaInicioRelLaboral'))-12
+        y = drawline(c, x +  25, y, 'NSS:')
+        y = drawline(c, x + 115, y, cfdi_nomina_receptor_node[0].getAttribute('NumSeguridadSocial'))
+        y = drawline(c, x + 315, y, 'Periodo:')
+        y = drawline(c, x + 405, y, cfdi_nomina_receptor_node[0].getAttribute('PeriodicidadPago'))-12
+        y = drawline(c, x +  25, y, 'Domicilio Fiscal:')
+        y = drawline(c, x + 115, y, cfdi_comprobante_node[0].getAttribute('LugarExpedicion'))
         
         # remove decimals from the number of days paid
         dias_pagados = cfdi_nomina_node[0].getAttribute('NumDiasPagados')
@@ -122,13 +128,13 @@ def canvas_pdf_parser(filename, pdfname):
             pass
 
         # you can then use the days_worked variable in your code as needed
-        y = drawline(c, x + 300, y, 'Días Trabajados:')
-        y = drawline(c, x + 390, y, str(dias_trabajados))-12
-        y = drawline(c, x +  40, y, 'Regimen Fiscal:')
-        y = drawline(c, x + 130, y, cfdi_emisor_node[0].getAttribute('RegimenFiscal'))
+        y = drawline(c, x + 315, y, 'Días Trabajados:')
+        y = drawline(c, x + 405, y, str(dias_trabajados))-12
+        y = drawline(c, x +  25, y, 'Regimen Fiscal:')
+        y = drawline(c, x + 115, y, get_tax_regime(cfdi_emisor_node[0].getAttribute('RegimenFiscal')))
         """ FALTAS POR SEMANA | verificar si es por quincena o semanal """
-        y = drawline(c, x + 300, y, 'Faltas:')
-        y = drawline(c, x + 390, y, str(dias_pagados - 7))-12
+        y = drawline(c, x + 315, y, 'Faltas:')
+        y = drawline(c, x + 405, y, str(dias_pagados - 7))-12
     else:
         y = drawrect(c, x, y, 590, 20, True, 0)
         y = drawtittle(c, x + 5, y + 6, 'DATOS DE CLIENTE')
@@ -139,7 +145,7 @@ def canvas_pdf_parser(filename, pdfname):
         y = drawline(c, x +  40, y, 'Domicilio Fiscal:')
         y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('LugarExpedicion'))-12
         y = drawline(c, x +  40, y, 'Regimen Fiscal:')
-        y = drawline(c, x + 180, y, cfdi_emisor_node[0].getAttribute('RegimenFiscal'))-12
+        y = drawline(c, x + 180, y, get_tax_regime(cfdi_emisor_node[0].getAttribute('RegimenFiscal')))-12
     
     # construction of the section that contains the cfdi data
     y = drawrect(c, x, y-18, 590, 20, True, 0)
@@ -153,13 +159,13 @@ def canvas_pdf_parser(filename, pdfname):
         y = drawline(c, x +  40, y, 'Fecha y hora de certificación:')
         y = drawline(c, x + 180, y, cfdi_timbre_node[0].getAttribute('FechaTimbrado'))-12
         y = drawline(c, x +  40, y, 'Uso CFDI:')
-        y = drawline(c, x + 180, y, cfdi_receptor_node[0].getAttribute('UsoCFDI'))-12
+        y = drawline(c, x + 180, y, get_cfdi_usage(cfdi_receptor_node[0].getAttribute('UsoCFDI')))-12
         y = drawline(c, x +  40, y, 'Forma de Pago:')
-        y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('FormaPago'))-12
+        y = drawline(c, x + 180, y, get_payment_form(cfdi_comprobante_node[0].getAttribute('FormaPago')))-12
         y = drawline(c, x +  40, y, 'Metodo de Pago:')
-        y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('MetodoPago'))-12
+        y = drawline(c, x + 180, y, get_payment_method(cfdi_comprobante_node[0].getAttribute('MetodoPago')))-12
         y = drawline(c, x +  40, y, 'Tipo de comprobante:')
-        y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('TipoDeComprobante'))-12
+        y = drawline(c, x + 180, y, get_cfdi_type(cfdi_comprobante_node[0].getAttribute('TipoDeComprobante')))-12
     else:
         y = drawline(c, x +  40, y, 'Folio:')
         y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('Folio'))-12
@@ -168,7 +174,7 @@ def canvas_pdf_parser(filename, pdfname):
         y = drawline(c, x +  40, y, 'Fecha y hora de certificación:')
         y = drawline(c, x + 180, y, cfdi_timbre_node[0].getAttribute('FechaTimbrado'))-12
         y = drawline(c, x +  40, y, 'Uso CFDI:')
-        y = drawline(c, x + 180, y, cfdi_receptor_node[0].getAttribute('UsoCFDI'))-12
+        y = drawline(c, x + 180, y, get_cfdi_usage(cfdi_receptor_node[0].getAttribute('UsoCFDI')))-12
         if cfdi_tipo == 'P':
             y = drawline(c, x +  40, y, 'Metodo de Pago:')
             y = drawline(c, x + 180, y, 'N/A')-12
@@ -176,11 +182,11 @@ def canvas_pdf_parser(filename, pdfname):
             y = drawline(c, x + 180, y, 'N/A')-12
         else:
             y = drawline(c, x +  40, y, 'Metodo de Pago:')
-            y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('MetodoPago'))-12
+            y = drawline(c, x + 180, y, get_payment_method(cfdi_comprobante_node[0].getAttribute('MetodoPago')))-12
             y = drawline(c, x +  40, y, 'Forma de Pago:')
-            y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('FormaPago'))-12
+            y = drawline(c, x + 180, y, get_payment_form(cfdi_comprobante_node[0].getAttribute('FormaPago')))-12
         y = drawline(c, x +  40, y, 'Tipo de comprobante:')
-        y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('TipoDeComprobante'))-12
+        y = drawline(c, x + 180, y, get_cfdi_type(cfdi_comprobante_node[0].getAttribute('TipoDeComprobante')))-12
 
     # draw the relations to documents after generating the array containing the table
     y = drawrect(c, x, y-18, 590, 20, True, 0)
@@ -202,10 +208,10 @@ def canvas_pdf_parser(filename, pdfname):
         y = drawline(c, x + 180, y, 'N/A')-12
 
     # draw the invoice or payroll concepts after generating the array that contains the table
-    concepts_rows = get_cfdi_concepts_table(cfdi_comprobante_node, cfdi_conceptos_node)
+    concepts_rows = get_cfdi_concepts_table(cfdi_comprobante_node, cfdi_conceptos_node, cfdi_Impuestos_node)
     
     # draw the table at position (x, y)
-    y = draw_concept_table(c, concepts_rows, x, y-12, cfdi_tipo)
+    y = draw_concept_table(c, concepts_rows, x, y-12)
     y = drawrect(c, x, y-12, 590, 1, True, 0)-12
 
     # totals table annex, quantity segment with letter, currency and digital stamps
@@ -283,11 +289,5 @@ def generate_pdf(rfc):
         try: 
             canvas_pdf_parser(filename, pdf_file)
         except Exception as e:
-            print(f'E1: Impossible to parse the tree: {filename}')
+            print(f'E1: Impossible to parse the tree: {filename} {e}')
             continue
-
-# Main script code
-if __name__ == '__main__':
-    # Code that is executed when the script is called directly
-    generate_pdf('MCM8501012U0')
-    pass
