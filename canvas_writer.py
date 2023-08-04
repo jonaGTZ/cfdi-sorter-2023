@@ -29,6 +29,7 @@ def drawline(c, x, y, text):
     c.setFontSize(9)
     # Check if the y position exceeds the page height and create a new page if necessary
     if y < 25:
+        add_footer(c)
         c.showPage()
         c.setFontSize(9)
         y = letter[1] - 25
@@ -44,6 +45,7 @@ def draw_concept_table(c, rows, x, y):
     
     # algorithm to lay the table in the PDF respectively at its height
     if y <= 45:
+        add_footer(c)
         c.showPage()
         y = letter[1] - 25
     else: 
@@ -87,6 +89,7 @@ def draw_related_table(c, rows, x, y):
 
     # algorithm to lay the table in the PDF respectively at its height
     if y <= 45:
+        add_footer(c)
         c.showPage()
         y = letter[1] - 25
     else: 
@@ -122,6 +125,7 @@ def draw_related_table(c, rows, x, y):
 def drawrect(c, x, y, w, h, f, s): 
     c.setFillColorRGB(0.447, 0.027, 0.027)    
     if y < 25:
+        add_footer(c)
         c.showPage()
         c.setFillColorRGB(0.447, 0.027, 0.027)
         y = letter[1] - 25
@@ -134,6 +138,7 @@ def drawtittle(c, x, y, text):
     c.setFontSize(12)
     # Check if the y position exceeds the page height and create a new page if necessary
     if y < 25:
+        add_footer(c)
         c.showPage()
         y = letter[1] - 25
     c.drawString(x, y, text)
@@ -144,6 +149,7 @@ def drawsubtittle(c, x, y, text):
     c.setFontSize(7)
     # Check if the y position exceeds the page height and create a new page if necessary
     if y < 25:
+        add_footer(c)
         c.showPage()
         y = letter[1] - 25
     c.drawString(x, y, text)
@@ -167,6 +173,7 @@ def drawQR(c, x, y, url):
     d = Drawing(width, height, transform=[x_scale, 0, 0, y_scale, -bounds[0] * x_scale, -bounds[1] * y_scale])
     d.add(qr_code)
     if y < 25:
+        add_footer(c)
         c.showPage()
         y = letter[1] - 25
         y -= 150
@@ -174,4 +181,11 @@ def drawQR(c, x, y, url):
     renderPDF.draw(d, c, x, y)
     return y
 
- 
+def add_footer(c):
+
+    page_number = c.getPageNumber()
+
+    # set the position and font for the footer text
+    c.setFont("Helvetica", 6)
+    c.drawString(72, 10, "Este documento es una representación impresa de un CFDI.")
+    c.drawRightString(540, 10, f"Página {page_number}")
