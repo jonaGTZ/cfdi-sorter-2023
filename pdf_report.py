@@ -132,9 +132,8 @@ def canvas_pdf_parser(filename, pdfname):
         y = drawline(c, x + 405, y, str(dias_trabajados))-12
         y = drawline(c, x +  25, y, 'Regimen Fiscal:')
         y = drawline(c, x + 115, y, get_tax_regime(cfdi_emisor_node[0].getAttribute('RegimenFiscal')))
-        """ FALTAS POR SEMANA | verificar si es por quincena o semanal """
         y = drawline(c, x + 315, y, 'Faltas:')
-        y = drawline(c, x + 405, y, str(dias_pagados - 7))-12
+        y = drawline(c, x + 405, y, str(15 - dias_trabajados))-12
     else:
         y = drawrect(c, x, y, 590, 20, True, 0)
         y = drawtittle(c, x + 5, y + 6, 'DATOS DE CLIENTE')
@@ -151,7 +150,6 @@ def canvas_pdf_parser(filename, pdfname):
     y = drawrect(c, x, y-18, 590, 20, True, 0)
     y = drawtittle(c, x+5, y + 6, 'DATOS DEL CFDI')
     if cfdi_tipo == 'N':
-        """ REVISAR QUE CONTENGA FOLIO """
         y = drawline(c, x +  40, y, 'Folio:')
         y = drawline(c, x + 180, y, cfdi_comprobante_node[0].getAttribute('Folio'))-12
         y = drawline(c, x +  40, y, 'Fecha y hora de emisión:')
@@ -230,27 +228,46 @@ def canvas_pdf_parser(filename, pdfname):
     
     # segment that converts the Digital Stamps with paragraph style
     style_digitalstamp  = ParagraphStyle(name='CustomStyle', fontSize=6, leading=6)
-    sello_cfdi          = Paragraph(cfdi_comprobante_node[0].getAttribute('Sello'), style_digitalstamp)
+    selloCFD           = cfdi_comprobante_node[0].getAttribute('Sello')
+    sello_cfd           = Paragraph(selloCFD, style_digitalstamp)
     sello_sat           = Paragraph(cfdi_timbre_node[0].getAttribute('SelloSAT'), style_digitalstamp)
+
+    # Concatenate the attributes in the following order, without spaces or line breaks
+    version             = cfdi_comprobante_node[0].getAttribute('Version')
+    uuid                = cfdi_timbre_node[0].getAttribute('UUID') 
+    fecha_timbrado      = cfdi_timbre_node[0].getAttribute('FechaTimbrado')
+    no_certificado_sat  = cfdi_timbre_node[0].getAttribute('NoCertificadoSAT')
+    rfc                 = cfdi_timbre_node[0].getAttribute('RfcProvCertif')
+    complemento         = Paragraph(get_addon_sat(version, uuid, fecha_timbrado, rfc, selloCFD, no_certificado_sat), style_digitalstamp)
     
     # draw the digital stamps object on the canvas 
     y = drawline(c, x, y-12, 'Sello Digital del CFDI:')-27
-    sello_cfdi.wrapOn(c,  400, inch)
-    sello_cfdi.drawOn(c, x+10, y)
+    sello_cfd.wrapOn(c,  400, inch)
+    sello_cfd.drawOn(c, x+10, y)
+
     y = drawline(c, x, y-12, 'Sello Digital del SAT:')-24
     sello_sat.wrapOn(c,  400, inch)
-    sello_sat.drawOn(c, x+10, y)
-    y = drawline(c, x, y-12, 'Cadena Original del complemento de certificación digital del SAT:')-24
-    sello_sat.wrapOn(c,  400, inch)
-    sello_sat.drawOn(c, x+10, y)
+    sello_sat.drawOn(c, x+10, y-6)
+
+    y = drawline(c, x, y-16, 'Cadena Original del complemento de certificación digital del SAT:')-24
+    complemento.wrapOn(c,  400, inch)
+    complemento.drawOn(c, x+10, y-6)
 
     # save canvas to pdf
     try:
+        page_number = c.getPageNumber()
+        # set the position and font for the footer text
+        c.setFont("Helvetica", 6)
+        c.drawString(72, 10, "Este documento es una representación impresa de un CFDI.")
+        c.drawRightString(540, 10, f"Página {page_number}")
         c.save()
         print(f'{pdfname}: Saved')
     except Exception as e:
         print(f'E1: Impossible to save the PFD: {pdfname}')
         pass
+
+def get_addon_sat(version, uuid, fecha_timbrado, rfc, selloCFD, no_certificado_sat):
+    return f'{version} || {uuid} || {fecha_timbrado} || {rfc} || {selloCFD} || {no_certificado_sat}'
 
 def getSELLO(comprobante):
     if comprobante:
