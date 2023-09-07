@@ -10,7 +10,7 @@
 from amount_with_letter         import amount_with_letter
 from canvas_writer              import drawline, draw_concept_table, draw_related_table, drawrect, drawtittle, drawsubtittle, drawimage, drawQR
 from list_table_builder         import get_related_cfdi_table, get_cfdi_concepts_table
-from pdf_details                import get_tax_regime, get_cfdi_usage, get_payment_method, get_payment_form, get_cfdi_type
+from cfdi_details               import get_tax_regime, get_cfdi_usage, get_payment_method, get_payment_form, get_cfdi_type
 # pdf build modules
 from reportlab.pdfgen           import canvas
 from reportlab.lib.styles       import ParagraphStyle

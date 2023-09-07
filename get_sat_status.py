@@ -22,6 +22,6 @@ def get_sat_status(rfc_sender, rfc_receiver, total, uuid):
             status = validation.obtener_estado(rfc_sender, rfc_receiver, total, uuid)
         except (requests.exceptions.ReadTimeout, requests.exceptions.ConnectionError) as e:
             print(f'{e}')
-            return 'Cancelado'
+            return 'Desconocido'
 
     return status.get('estado')

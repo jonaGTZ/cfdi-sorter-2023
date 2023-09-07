@@ -5,19 +5,10 @@
 
 # import necessary modules
 import json
-import os
 
 from set_sat_status import set_sat_status
-from lxml import etree
-
-def type_receipt_with_letter(type_recipt):
-    type_recipt_list = {
-        'I':'Ingreso',
-        'E':'Egreso',
-        'P':'Pago',
-        'N':'Nómina'
-    }
-    return type_recipt_list.get(type_recipt)
+from lxml           import etree
+from cfdi_details   import get_regime_payroll, get_tax_regime, get_cfdi_usage, get_payment_method, get_payment_form, get_cfdi_type
 
 # set of row names to be mapped by the dictionary named row
 option_mapping = {
@@ -52,10 +43,10 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                         row['Serie']                       = node.attrib.get('Serie'                       , '')
                         row['Folio']                       = node.attrib.get('Folio'                       , '')
                         row['Tipo Comprobante']            = node.attrib.get('TipoDeComprobante'           , '')
-                        row['Tipo']                        = type_receipt_with_letter(node.attrib.get('TipoDeComprobante'))
+                        row['Tipo']                        = get_cfdi_type(node.attrib.get('TipoDeComprobante'))
                         if not (option == 'PAGO_R' or option == 'PAGO_E'):
-                            row['Metodo Pago']             = node.attrib.get('MetodoPago'                  , '')
-                        row['Forma Pago']                  = node.attrib.get('FormaPago'                   , '')
+                            row['Metodo Pago']             = get_payment_method(node.attrib.get('MetodoPago'                  , ''))
+                        row['Forma Pago']                  = get_payment_form(node.attrib.get('FormaPago'                   , ''))
                         row['Subtotal']                    = node.attrib.get('SubTotal'                    , '')
                         if not (option == 'GASTO' or option == 'PAGO_R' or option == 'PAGO_E'):
                             row['Descuento']               = node.attrib.get('Descuento'                   , '')
@@ -91,25 +82,25 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                     if node.tag.endswith('{http://www.sat.gob.mx/cfd/3}Emisor'):
                         row['RFC Emisor']                  = node.attrib.get('Rfc'                         , '')
                         row['Nombre Emisor']               = node.attrib.get('Nombre'                      , '')
-                        row['Regimen Fiscal Emisor']       = node.attrib.get('RegimenFiscal'               , '')
+                        row['Regimen Fiscal Emisor']       = get_tax_regime(node.attrib.get('RegimenFiscal'               , ''))
                     elif node.tag.endswith('{http://www.sat.gob.mx/cfd/4}Emisor'):
                         row['RFC Emisor']                  = node.attrib.get('Rfc'                         , '')
                         row['Nombre Emisor']               = node.attrib.get('Nombre'                      , '')
-                        row['Regimen Fiscal Emisor']       = node.attrib.get('RegimenFiscal'               , '')
+                        row['Regimen Fiscal Emisor']       = get_tax_regime(node.attrib.get('RegimenFiscal'               , ''))
 
                     # Add "cfdi:Receptor" attribs as new row
                     if node.tag.endswith('{http://www.sat.gob.mx/cfd/3}Receptor'):
                         row['RFC Receptor']                = node.attrib.get('Rfc'                         , '')
                         row['Nombre Receptor']             = node.attrib.get('Nombre'                      , '')
                         row['CP Receptor']                 = node.attrib.get('DomicilioFiscalReceptor'     , '')
-                        row['Regimen Fiscal Receptor']     = node.attrib.get('RegimenFiscalReceptor'       , '')
-                        row['Uso CFDI']                    = node.attrib.get('UsoCFDI'                     , '')
+                        row['Regimen Fiscal Receptor']     = get_tax_regime(node.attrib.get('RegimenFiscalReceptor'       , ''))
+                        row['Uso CFDI']                    = get_cfdi_usage(node.attrib.get('UsoCFDI'                     , ''))
                     elif node.tag.endswith('{http://www.sat.gob.mx/cfd/4}Receptor'):
                         row['RFC Receptor']                = node.attrib.get('Rfc'                         , '')
                         row['Nombre Receptor']             = node.attrib.get('Nombre'                      , '')
                         row['CP Receptor']                 = node.attrib.get('DomicilioFiscalReceptor'     , '')
-                        row['Regimen Fiscal Receptor']     = node.attrib.get('RegimenFiscalReceptor'       , '')
-                        row['Uso CFDI']                    = node.attrib.get('UsoCFDI'                     , '')
+                        row['Regimen Fiscal Receptor']     = get_tax_regime(node.attrib.get('RegimenFiscalReceptor'       , ''))
+                        row['Uso CFDI']                    = get_cfdi_usage(node.attrib.get('UsoCFDI'                     , ''))
 
                     # Add "leyendasFisc:Leyenda" attribs as new row
                     if node.tag.endswith('Leyenda'):
@@ -168,7 +159,7 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                         row['Tipo Contrato']               = node.attrib.get('TipoContrato'                , '')
                         row['Sindicalizado']               = node.attrib.get('Sindicalizado'               , '')
                         row['Tipo Jornada']                = node.attrib.get('TipoJornada'                 , '')
-                        row['Tipo Regimen']                = node.attrib.get('TipoRegimen'                 , '')
+                        row['Tipo Regimen']                = get_regime_payroll(node.attrib.get('TipoRegimen'                 , ''))
                         row['Num Empleado']                = node.attrib.get('NumEmpleado'                 , '')
                         row['Departamento']                = node.attrib.get('Departamento'                , '')
                         row['Puesto']                      = node.attrib.get('Puesto'                      , '')

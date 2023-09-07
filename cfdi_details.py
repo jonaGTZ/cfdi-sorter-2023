@@ -4,6 +4,7 @@
 # Description:      [Brief description of the purpose of the script]
 
 # import necessary modules
+
 def get_tax_regime(regimer):
 
     default_value=f'{regimer}-Régimen no especificado'
@@ -104,11 +105,25 @@ def get_cfdi_type(cfdi):
     default_value=f'{cfdi} - Tipo de CFDI no especificado'
 
     cfdi_types = {
-        'I': 'Ingreso',
-        'E': 'Egreso',
-        'T': 'Traslado',
-        'P': 'Pago',
-        'N': 'Nómina'
+        'I': 'I - Ingreso',
+        'E': 'E - Egreso',
+        'T': 'T - Traslado',
+        'P': 'P - Pago',
+        'N': 'N - Nómina'
     }
 
     return cfdi_types.get(cfdi, default_value)
+
+def get_regime_payroll(regime):
+    
+    default_value=f'{regime} - Regimen no especificado'
+
+    regime_types = {
+        '02': '02 - Sueldos',
+        '03': '03 - Jubilados',
+        '04': '04 - Pensionados',
+        '09': '09 - Asimilados Honorarios',
+        '13': '13 - Indemnización o Separación'
+    }
+
+    return regime_types.get(regime, default_value)
