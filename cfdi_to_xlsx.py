@@ -95,7 +95,7 @@ def dict_to_xlsx(option, rfc):
         header_format = writer.book.add_format({'bold': True, 'bg_color': '#730707', 'font_color': 'white'})
 
         # Convert the DataFrame to an Excel sheet
-        df.to_excel(writer, sheet_name=f'{option}', index=False)
+        df.to_excel(writer, sheet_name=f'{option}', index=False, float_format='%.2f')
         
         worksheet = writer.sheets[f'{option}']
 

@@ -44,7 +44,9 @@
         "Importe":"",
         "Descuento":""
     }],
-	"Objeto Impuesto":"",
+	"Lista Clave de Producto":[{}],
+	"Lista Clave de Unidad":[{}],
+	"Lista Unidad":[{}],
 	"Total Retenciones Locales":"",
 	"Total Imp Retenidos":"",
 	"Total Traslados":"",
