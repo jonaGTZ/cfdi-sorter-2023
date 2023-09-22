@@ -106,7 +106,7 @@ def cfdi_sorter(rfc, directory):
             # Create a dictionary with the data
             data = {
                 'Estado SAT'    : sat_status,
-                'Fecha Consulta': datetime.now().strftime('%m%d%Y-%H%M%S')
+                'Fecha Consulta': datetime.now().strftime('%Y-%m-%dT%H:%M:%S')
             }
             
             # Check if the value of metodo_pago is valid

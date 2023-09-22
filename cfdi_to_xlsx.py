@@ -76,15 +76,14 @@ def cfdi_to_dict(option, rfc):
                 # break #
         return filas, dirpath
     
-    except Exception as e:
-        print(f'cfdi_to_dict E: {e}')
-        pass
+    except:
+        raise Exception(f'E4: Impossible to get xlsx columns: {filename}')
 
 def dict_to_xlsx(option, rfc):
     try:
         # calls the cfdi_to_dict function that returns the address where to save the xlsx and the array of the cfdi data
         filas, dirpath = cfdi_to_dict(option, rfc)
-
+        
         # Create a DataFrame from the list of rows
         df = pd.concat([pd.DataFrame(fila, index=[0]) for fila in filas], ignore_index=True)
 
@@ -113,6 +112,5 @@ def dict_to_xlsx(option, rfc):
         #     print("SAT state dictionary cleared successfully")
 
     except Exception as e:
-        print(f'E4: {e}')
+        print (e)
         pass
-

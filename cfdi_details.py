@@ -7,7 +7,7 @@
 
 def get_tax_regime(regimer):
 
-    default_value=f'{regimer}-Régimen no especificado'
+    default_value=f'{regimer}Régimen no especificado'
     
     tax_regime = {
         '601': '601 - General de Ley Personas Morales',
@@ -22,9 +22,23 @@ def get_tax_regime(regimer):
         '612': '612 - Personas Físicas con Actividades Empresariales y Profesionales',
         '614': '614 - Ingresos por intereses',
         '615': '615 - Régimen de los ingresos por obtención de premios',
-        '616': '616 - Sin obligaciones fiscales'
+        '616': '616 - Sin obligaciones fiscales',
+        '620': '620 - Sociedades Cooperativas de Producción que optan por diferir sus ingresos',
+        '621': '621 - Incorporación Fiscal',
+        '622': '622 - Actividades Agrícolas, Ganaderas, Silvícolas y Pesqueras',
+        '623': '623 - Opcional para Grupos de Sociedades',
+        '624': '624 - Coordinados',
+        '626': '626 - Régimen Simplificado de Confianza',
+        '628': '628 - Hidrocarburos',
+        '607': '607 - Régimen de Enajenación o Adquisición de Bienes',
+        '629': '629 - De los regímenes fiscales preferentes y de las empresas multinacionales',
+        '630': '630 - Enajenación de acciones en bolsa de valores',
+        '639': '639 - Régimen de los ingresos obtenidos por residentes en el extranjero',
+        '640': '640 - Régimen de Consolidación Fiscal',
+        '697': '697 - Régimen General de Pequeños Contribuyentes',
+        '698': '698 - Régimen de actividades empresariales y profesionales',
+        '699': '699 - Otros regímenes',
     }
-
     return tax_regime.get(regimer, default_value)
 
 def get_cfdi_usage(usage):
