@@ -7,7 +7,7 @@
 
 def get_tax_regime(regimer):
 
-    default_value=f'{regimer}Régimen no especificado'
+    default_value=f'Régimen no especificado {regimer}'
     
     tax_regime = {
         '601': '601 - General de Ley Personas Morales',
@@ -43,7 +43,7 @@ def get_tax_regime(regimer):
 
 def get_cfdi_usage(usage):
     
-    default_value=f'{usage}-Uso del CFDI no especificado'
+    default_value=f'Uso del CFDI no especificado {usage}'
     
     cfdi_usage = {
         'G01': 'G01 - Adquisición de mercancías',
@@ -74,7 +74,7 @@ def get_cfdi_usage(usage):
 
 def get_payment_method(payment):
 
-    default_value=f'{payment} - Método de pago no especificado'
+    default_value=f'Método de pago no especificado {payment}'
 
     payment_methods = {
         'PUE': 'PUE - Pago en una sola exhibición',
@@ -85,7 +85,7 @@ def get_payment_method(payment):
 
 def get_payment_form(payment):
 
-    default_value=f'{payment} - Forma de pago no especificada'
+    default_value=f'Forma de pago no especificada {payment}'
     
     payment_forms = {
         '01': '01 - Efectivo',
@@ -116,7 +116,7 @@ def get_payment_form(payment):
 
 def get_cfdi_type(cfdi):
     
-    default_value=f'{cfdi} - Tipo de CFDI no especificado'
+    default_value=f'Tipo de CFDI no especificado {cfdi}'
 
     cfdi_types = {
         'I': 'I - Ingreso',
@@ -130,7 +130,7 @@ def get_cfdi_type(cfdi):
 
 def get_regime_payroll(regime):
     
-    default_value=f'{regime} - Regimen no especificado'
+    default_value=f'Regimen no especificado {regime}'
 
     regime_types = {
         '02': '02 - Sueldos',
@@ -141,3 +141,99 @@ def get_regime_payroll(regime):
     }
 
     return regime_types.get(regime, default_value)
+
+def get_related_cfdi_type(type):
+
+    default_value=f'tipo no especificado {type}'
+
+    related_types = {
+        '01': '01 - Notas de Crédito de Documentos Relacionados',
+        '02': '02 - Notas de Débito de los Documentos Relacionados',
+        '03': '03 - Devolución de Mercancías sobre Facturas o Traslados Previos',
+        '04': '04 - Sustitución de los CFDI Previos',
+        '05': '05 - Traslados de Mercancías Facturados Previamente',
+        '06': '06 - Factura Generada por los Traslados Previos',
+        '07': '07 - CFDI por Aplicación de Anticipo',
+        '08': '08 - Facturas Generadas por Pagos en Parcialidades',
+        '09': '09 - Factura Generada por Pagos Diferidos',    
+    }
+
+    return related_types.get(type, default_value)
+
+def get_exchange_type(type):
+
+    default_value=f'' # value doesn't exist
+
+    related_types = {
+        '01': '01 - MXN',
+        '02': '02 - XXX',
+    }
+
+    return related_types.get(type, default_value)
+
+def get_DR_taxes_type(type):
+
+    default_value=f'' # value doesn't exist
+
+    taxes_DR = {
+        '001': '001 - IVA',
+        '002': '002 - ISR',
+        '003': '003 - IEPS',
+        '004': '004 - Retención de ISR por honorarios',
+        '005': '005 - Retención de ISR por arrendamiento',
+        '006': '006 - Retención de ISR por servicios profesionales',
+        '007': '007 - Retención de ISR por enajenación de bienes',
+        '008': '008 - Retención de ISR por intereses',
+        '009': '009 - Retención de ISR por dividendos o utilidades',
+        '010': '010 - IVA retenido por arrendamiento',
+        '011': '011 - IVA retenido por servicios profesionales',
+        '012': '012 - IVA retenido por enajenación de bienes',
+        '013': '013 - IVA retenido por intereses',
+        '014': '014 - IVA retenido por dividendos o utilidades',
+        '015': '015 - IVA por traslado de bienes',
+        '016': '016 - IVA por servicios profesionales',
+        '017': '017 - IVA por servicios de hospedaje',
+        '018': '018 - IVA por autotransporte terrestre de carga',
+        '019': '019 - IVA por servicios de construcción',
+        '020': '020 - IVA por prestación de servicios de arrendamiento de bienes muebles',
+        '021': '021 - IVA por servicios de autotransporte terrestre de personas',
+        '022': '022 - IVA por servicios de hospedaje',
+        '023': '023 - IVA por servicio de comisión mercantil',
+        '024': '024 - IVA por servicios de intermediación financiera',
+        '025': '025 - IVA por servicios de autotransporte marítimo',
+        '026': '026 - IVA por servicios de autotransporte aéreo',
+        '027': '027 - IVA por servicios de autotransporte ferroviario',
+        '028': '028 - IVA por servicios de mensajería',
+    }   
+    return taxes_DR.get(type, default_value)
+
+def get_payment_type_p(type):
+
+    default_value=f'' # value doesn't exist
+    
+    payment_methods_P = {
+        '01': '01 - Efectivo',
+        '02': '02 - Cheque nominativo',
+        '03': '03 - Transferencia electrónica de fondos',
+        '04': '04 - Tarjeta de crédito',
+        '05': '05 - Monedero electrónico',
+        '06': '06 - Dinero electrónico',
+        '08': '08 - Vales de despensa',
+        '28': '28 - Tarjeta de débito',
+        '29': '29 - Tarjeta de servicios',
+        '30': '30 - Aplicación de pagos',
+        '31': '31 - Domiciliación',
+        '32': '32 - Pago por subrogación',
+        '33': '33 - Pago por consignación',
+        '34': '34 - Condonación',
+        '35': '35 - Compensación',
+        '36': '36 - Novación',
+        '37': '37 - Confusión',
+        '38': '38 - Remisión de deuda',
+        '39': '39 - Prescripción o caducidad',
+        '40': '40 - A satisfacción del acreedor',
+        '41': '41 - Tarjeta de débito',
+        '42': '42 - Tarjeta de servicios',
+        '43': '43 - Aplicación de pagos'
+    }
+    return payment_methods_P.get(type, default_value)

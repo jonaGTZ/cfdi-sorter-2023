@@ -4,12 +4,11 @@
 # Description:      [Brief description of the purpose of the script]
 
 # import necessary modules
-import json
 
 from datetime       import datetime
 from set_sat_status import set_sat_status
 from lxml           import etree
-from cfdi_details   import get_regime_payroll, get_tax_regime, get_cfdi_usage, get_payment_method, get_payment_form, get_cfdi_type
+from cfdi_details   import get_regime_payroll, get_tax_regime, get_cfdi_usage, get_payment_method, get_payment_form, get_cfdi_type, get_exchange_type, get_related_cfdi_type, get_DR_taxes_type, get_payment_type_p
 
 def string_to_double(string):
     try:
@@ -17,7 +16,7 @@ def string_to_double(string):
         return num
     except ValueError:
         # Handle exception in case string is not convertible to number
-        return string  # Optionally, you can throw a custom exception here
+        return str(string)  # Optionally, you can throw a custom exception here
 
 def clean_concept(dic):
     # Verificamos que la entrada sea una lista de diccionarios
@@ -29,12 +28,11 @@ def clean_concept(dic):
         for data in dic:
             # Iteramos sobre los valores del diccionario y los convertimos a cadena
             key_value = ", ".join([f"{key}: {value}" for key, value in data.items()])
-            key_value_list.append(key_value)
             # Concatenamos los valores con comas y los agregamos a la lista
-            key_value_list.append(key_value)
+            key_value_list.append(f'{{{key_value}}},')
         
         # Retornamos la lista de valores como una cadena separada por saltos de línea
-        return "\n".join(key_value_list)
+        return ' '.join(key_value_list)
     else:
         return "Entrada no válida, se espera una lista de diccionarios JSON."
     
@@ -46,180 +44,171 @@ def list_to_string(strings):
 
 def cfdi_row_collector(node, row, filename, option, rfc):
 
-    emisor      = ''
-    receptor    = ''
-    
-    if node.tag.endswith('Comprobante'):
-        if node.attrib.get('Version') == '4.0':
-            emisor      = '{http://www.sat.gob.mx/cfd/4}Emisor'
-            receptor    = '{http://www.sat.gob.mx/cfd/4}Receptor'
+    def set_cfdi_attrib(attrib):
+        return node.attrib.get(attrib, '')
     
     try:
         # Add "cfdi:Comprobante" node as new column
-        if node.tag.endswith('Comprobante'):
-            row['Version']                     = node.attrib.get('Version'                     , '')
-            row['Fecha Emision']               = datetime.strptime(node.attrib.get('Fecha'), '%Y-%m-%dT%H:%M:%S')
-            row['Serie']                       = node.attrib.get('Serie'                       , '')
-            row['Folio']                       = node.attrib.get('Folio'                       , '')
-            row['Tipo Comprobante']            = node.attrib.get('TipoDeComprobante'           , '')
-            row['Tipo']                        = get_cfdi_type(node.attrib.get('TipoDeComprobante'))
+        if str(node.tag).endswith('Comprobante'):
+            row['Version']                     = set_cfdi_attrib('Version')
+            row['Fecha Emision']               = datetime.strptime(set_cfdi_attrib('Fecha'), '%Y-%m-%dT%H:%M:%S')
+            row['Serie']                       = set_cfdi_attrib('Serie')
+            row['Folio']                       = set_cfdi_attrib('Folio')
+            row['Tipo Comprobante']            = set_cfdi_attrib('TipoDeComprobante')
+            row['Tipo']                        = get_cfdi_type(set_cfdi_attrib('TipoDeComprobante'))
             if not (option == 'PAGO_R' or option == 'PAGO_E'):
-                row['Metodo Pago']             = get_payment_method(node.attrib.get('MetodoPago'                , ''))
-            row['Forma Pago']                  = get_payment_form(node.attrib.get('FormaPago'                   , ''))
-            row['Subtotal']                    = string_to_double(node.attrib.get('SubTotal'                    , ''))
-            if not (option == 'GASTO' or option == 'PAGO_R' or option == 'PAGO_E'):
-                row['Descuento']               = node.attrib.get('Descuento'                   , '')
-
-            row['Total']                       = string_to_double(node.attrib.get('Total'                       , ''))
-            row['Moneda']                      = node.attrib.get('Moneda'                      , '')
-            if not (option == 'NOMINA' or option == 'AYUDA' or option == 'INGRESO'):
-                row['Tipo Cambio']             = node.attrib.get('TipoCambio'                  , '')
-            row['CP Emisor']                   = node.attrib.get('LugarExpedicion'             , '')
-            row['Moneda']                      = node.attrib.get('Moneda'                      , '')
-            row['Sello']                       = node.attrib.get('Sello'                       , '')
-            row['No Certificado']              = node.attrib.get('NoCertificado'               , '')
-            row['Certificado']                 = node.attrib.get('Certificado'                 , '')
+                row['Metodo Pago']             = get_payment_method(set_cfdi_attrib('MetodoPago'))
+            row['Forma Pago']                  = get_payment_form(set_cfdi_attrib('FormaPago'))
+            row['Subtotal']                    = string_to_double(set_cfdi_attrib('SubTotal'))
+            row['Descuento']                   = string_to_double(set_cfdi_attrib('Descuento'))
+            row['Total']                       = string_to_double(set_cfdi_attrib('Total'))
+            row['Moneda']                      = set_cfdi_attrib('Moneda')
+            row['Tipo Cambio']                 = get_exchange_type(set_cfdi_attrib('TipoCambio'))
+            row['CP Emisor']                   = set_cfdi_attrib('LugarExpedicion')
+            row['Moneda']                      = set_cfdi_attrib('Moneda')
+            row['Sello']                       = set_cfdi_attrib('Sello')
+            row['No Certificado']              = set_cfdi_attrib('NoCertificado')
+            row['Certificado']                 = set_cfdi_attrib('Certificado')
             if option == 'DES_BON_DEV' or option == 'GASTO':
-                row['Condiciones Pago']            = node.attrib.get('CondicionesDePago'           , '')
-            
-        
+                row['Condiciones Pago']        = set_cfdi_attrib('CondicionesDePago')
+
         # Add "cfdi:InformacionGlobal" attribs as new row
-        if node.tag.endswith('InformacionGlobal'):
-            row['Periodicidad_Global']         = node.attrib.get('Periodicidad'                , '')
-            row['Meses_Global']                = node.attrib.get('Meses'                       , '')
-            row['Año_Global']                  = node.attrib.get('Año'                         , '')
+        if str(node.tag).endswith('{http://www.sat.gob.mx/cfd/4}InformacionGlobal'): # It should only exist for type I, type E receipts. CFDI 4.0
+            row['Periodicidad_Global']         = set_cfdi_attrib('Periodicidad')
+            row['Meses_Global']                = set_cfdi_attrib('Meses')
+            row['Año_Global']                  = set_cfdi_attrib('Año')
 
         # Add "cfdi:CfdiRelacionados" attribs as new row
-        if node.tag.endswith('CfdiRelacionados'):
-            row['Tipo Relacion']               = node.attrib.get('TipoRelacion'                , '')
-        
+        if str(node.tag).endswith('CfdiRelacionados'):
+            row['Tipo Relacion']               = get_related_cfdi_type(set_cfdi_attrib('TipoRelacion'))
+
         # Add "cfdi:CfdiRelacionado" attribs as new row
-        if node.tag.endswith('CfdiRelacionado'):
-            row['UUID Relacion']               = node.attrib.get('UUID'                        , '')
-        
+        if str(node.tag).endswith('CfdiRelacionado'):
+            row['UUID Relacion']               = set_cfdi_attrib('UUID')
+
         # Add "cfdi:Emisor" attribs as new row
-        if node.tag.endswith('{http://www.sat.gob.mx/cfd/3}Emisor'):
-            row['RFC Emisor']                  = node.attrib.get('Rfc'                         , '')
-            row['Nombre Emisor']               = node.attrib.get('Nombre'                      , '')
-            row['Regimen Fiscal Emisor']       = get_tax_regime(node.attrib.get('RegimenFiscal'               , ''))
-        elif node.tag.endswith('{http://www.sat.gob.mx/cfd/4}Emisor'):
-            row['RFC Emisor']                  = node.attrib.get('Rfc'                         , '')
-            row['Nombre Emisor']               = node.attrib.get('Nombre'                      , '')
-            row['Regimen Fiscal Emisor']       = get_tax_regime(node.attrib.get('RegimenFiscal'               , ''))
+        if str(node.tag).endswith('{http://www.sat.gob.mx/cfd/3}Emisor'):
+            row['RFC Emisor']                  = set_cfdi_attrib('Rfc')
+            row['Nombre Emisor']               = set_cfdi_attrib('Nombre')
+            row['Regimen Fiscal Emisor']       = get_tax_regime(set_cfdi_attrib('RegimenFiscal'))
+        elif str(node.tag).endswith('{http://www.sat.gob.mx/cfd/4}Emisor'):
+            row['RFC Emisor']                  = set_cfdi_attrib('Rfc')
+            row['Nombre Emisor']               = set_cfdi_attrib('Nombre')
+            row['Regimen Fiscal Emisor']       = get_tax_regime(set_cfdi_attrib('RegimenFiscal'))
 
         # Add "cfdi:Receptor" attribs as new row
-        if node.tag.endswith('{http://www.sat.gob.mx/cfd/3}Receptor'):
-            row['RFC Receptor']                = node.attrib.get('Rfc'                         , '')
-            row['Nombre Receptor']             = node.attrib.get('Nombre'                      , '')
-            row['CP Receptor']                 = node.attrib.get('DomicilioFiscalReceptor'     , '')
-            row['Regimen Fiscal Receptor']     = get_tax_regime(node.attrib.get('RegimenFiscalReceptor'       , ''))
-            row['Uso CFDI']                    = get_cfdi_usage(node.attrib.get('UsoCFDI'                     , ''))
-        elif node.tag.endswith('{http://www.sat.gob.mx/cfd/4}Receptor'):
-            row['RFC Receptor']                = node.attrib.get('Rfc'                         , '')
-            row['Nombre Receptor']             = node.attrib.get('Nombre'                      , '')
-            row['CP Receptor']                 = node.attrib.get('DomicilioFiscalReceptor'     , '')
-            row['Regimen Fiscal Receptor']     = get_tax_regime(node.attrib.get('RegimenFiscalReceptor'       , ''))
-            row['Uso CFDI']                    = get_cfdi_usage(node.attrib.get('UsoCFDI'                     , ''))
+        if str(node.tag).endswith('{http://www.sat.gob.mx/cfd/3}Receptor'):
+            row['RFC Receptor']                = set_cfdi_attrib('Rfc')
+            row['Nombre Receptor']             = set_cfdi_attrib('Nombre')
+            row['CP Receptor']                 = set_cfdi_attrib('DomicilioFiscalReceptor')
+            row['Regimen Fiscal Receptor']     = get_tax_regime(set_cfdi_attrib('RegimenFiscalReceptor'))
+            row['Uso CFDI']                    = get_cfdi_usage(set_cfdi_attrib('UsoCFDI'))
+        elif str(node.tag).endswith('{http://www.sat.gob.mx/cfd/4}Receptor'):
+            row['RFC Receptor']                = set_cfdi_attrib('Rfc')
+            row['Nombre Receptor']             = set_cfdi_attrib('Nombre')
+            row['CP Receptor']                 = set_cfdi_attrib('DomicilioFiscalReceptor')
+            row['Regimen Fiscal Receptor']     = get_tax_regime(set_cfdi_attrib('RegimenFiscalReceptor'))
+            row['Uso CFDI']                    = get_cfdi_usage(set_cfdi_attrib('UsoCFDI'))
 
         # Add "leyendasFisc:Leyenda" attribs as new row
-        if node.tag.endswith('Leyenda'):
-            row['Leyenda']                     = node.attrib.get('textoLeyenda'                , '')
+        if str(node.tag).endswith('Leyenda'):
+            row['Leyenda']                     = set_cfdi_attrib('textoLeyenda')
 
         # Add "cfdi:Impuestos" attribs as new row 
-        if node.tag.endswith('Impuestos'):
-            row['Total Imp Retenidos']         = string_to_double(node.attrib.get('TotalImpuestosRetenidos'     , ''))
-            row['Total Imp Trasladados']       = string_to_double(node.attrib.get('TotalImpuestosTrasladados'   , ''))
+        if str(node.tag).endswith('Impuestos'):
+            row['Total Imp Retenidos']         = string_to_double(set_cfdi_attrib('TotalImpuestosRetenidos'))
+            row['Total Imp Trasladados']       = string_to_double(set_cfdi_attrib('TotalImpuestosTrasladados'))
 
         # Add "cfdi:TimbreFiscalDigital" attribs as new row
-        if node.tag.endswith('TimbreFiscalDigital'):
-            row['Fecha Timbrado']              = datetime.strptime(node.attrib.get('FechaTimbrado'), '%Y-%m-%dT%H:%M:%S')
-            row['UUID']                        = node.attrib.get('UUID', '')
+        if str(node.tag).endswith('TimbreFiscalDigital'):
+            row['Fecha Timbrado']              = datetime.strptime(set_cfdi_attrib('FechaTimbrado'), '%Y-%m-%dT%H:%M:%S')
+            row['UUID']                        = set_cfdi_attrib('UUID')
             # call to the data stored in the json generated in the sorter
-            estado_sat, fecha_consulta          = set_sat_status(node.attrib.get('UUID', ''), option, rfc)
+            estado_sat, fecha_consulta         = set_sat_status(set_cfdi_attrib('UUID'), option, rfc)
             row['Estado SAT']                  = estado_sat
             row['Fecha Consulta']              = datetime.strptime(fecha_consulta, '%Y-%m-%dT%H:%M:%S')
 
         # Add "cfdi:InformacionAduanera" attribs as new row
-        if node.tag.endswith('InformacionAduanera'):
-            row['Numero Pedimento']            = node.attrib.get('NumeroPedimento'             , '')
+        if str(node.tag).endswith('InformacionAduanera'):
+            row['Numero Pedimento']            = set_cfdi_attrib('NumeroPedimento')
         
         # Add "nomina12:Nomina" attribs as new row
-        if node.tag.endswith("{http://www.sat.gob.mx/nomina12}Nomina"):
-            row['ISR']                         = string_to_double(node.attrib.get('TotalDeducciones'            , ''))
-            row['Version Nomina']              = node.attrib.get('Version '                    , '')
-            row['Tipo Nomina']                 = node.attrib.get('TipoNomina'                  , '')
-            row['Fecha Pago']                  = node.attrib.get('FechaPago'                   , '')
-            row['Fecha Inicial Pago']          = node.attrib.get('FechaInicialPago'            , '')
-            row['Fecha Final Pago']            = node.attrib.get('FechaFinalPago'              , '')
-            row['Num Dias Pagados']            = node.attrib.get('NumDiasPagados'              , '')
-            row['Total Percepciones']          = string_to_double(node.attrib.get('TotalPercepciones'           , ''))
-            row['Total Deducciones']           = string_to_double(node.attrib.get('TotalDeducciones'            , ''))
-            row['Total Otros Pagos']           = string_to_double(node.attrib.get('TotalOtrosPagos'             , ''))
-            row['Fecha Pago']                  = node.attrib.get('FechaPago'                   , '')
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}Nomina"):
+            row['ISR']                         = string_to_double(set_cfdi_attrib('TotalDeducciones'))
+            row['Version Nomina']              = set_cfdi_attrib('Version')
+            row['Tipo Nomina']                 = set_cfdi_attrib('TipoNomina')
+            row['Fecha Pago']                  = datetime.strptime(set_cfdi_attrib('FechaPago'), '%Y-%m-%d')
+            row['Fecha Inicial Pago']          = datetime.strptime(set_cfdi_attrib('FechaInicialPago'), '%Y-%m-%d')
+            row['Fecha Final Pago']            = datetime.strptime(set_cfdi_attrib('FechaFinalPago'), '%Y-%m-%d')
+            row['Num Dias Pagados']            = set_cfdi_attrib('NumDiasPagados')
+            row['Total Percepciones']          = string_to_double(set_cfdi_attrib('TotalPercepciones'))
+            row['Total Deducciones']           = string_to_double(set_cfdi_attrib('TotalDeducciones'))
+            row['Total Otros Pagos']           = string_to_double(set_cfdi_attrib('TotalOtrosPagos'))
+            row['Fecha Pago']                  = set_cfdi_attrib('FechaPago')
         
         # Add "nomina12:Emisor" attribs as new row
-        if node.tag.endswith("{http://www.sat.gob.mx/nomina12}Emisor"):
-            row['Registro Patronal']           = node.attrib.get('RegistroPatronal'            , '')    
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}Emisor"):
+            row['Registro Patronal']           = set_cfdi_attrib('RegistroPatronal')    
             
         # Add "nomina12:Receptor" attribs as new row
-        if node.tag.endswith("{http://www.sat.gob.mx/nomina12}Receptor"):
-            row['CURP']                        = node.attrib.get('Curp'                        , '')
-            row['Num Seguridad Social']        = node.attrib.get('NumSeguridadSocial'          , '')
-            row['Fecha Inicial Relac Lab']     = node.attrib.get('FechaInicioRelLaboral'       , '')
-            row['Antigüedad']                  = node.attrib.get('Antigüedad'                  , '')
-            row['Tipo Contrato']               = node.attrib.get('TipoContrato'                , '')
-            row['Sindicalizado']               = node.attrib.get('Sindicalizado'               , '')
-            row['Tipo Jornada']                = node.attrib.get('TipoJornada'                 , '')
-            row['Tipo Regimen']                = get_regime_payroll(node.attrib.get('TipoRegimen'                 , ''))
-            row['Num Empleado']                = node.attrib.get('NumEmpleado'                 , '')
-            row['Departamento']                = node.attrib.get('Departamento'                , '')
-            row['Puesto']                      = node.attrib.get('Puesto'                      , '')
-            row['Riesgo Puesto']               = node.attrib.get('RiesgoPuesto'                , '')
-            row['Periodicidad Pago']           = node.attrib.get('PeriodicidadPago'            , '')
-            row['Banco']                       = node.attrib.get('Banco'                       , '')
-            row['Cuenta Bancaria']             = node.attrib.get('CuentaBancaria'              , '')
-            row['Salario Base Cotiz']          = node.attrib.get('SalarioBaseCotApor'          , '')
-            row['SDI']                         = node.attrib.get('SalarioDiarioIntegrado'      , '')
-            row['Clave Entidad']               = node.attrib.get('ClaveEntFed'                 , '')
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}Receptor"):
+            row['CURP']                        = set_cfdi_attrib('Curp')
+            row['Num Seguridad Social']        = set_cfdi_attrib('NumSeguridadSocial')
+            row['Fecha Inicial Relac Lab']     = set_cfdi_attrib('FechaInicioRelLaboral')
+            row['Antigüedad']                  = set_cfdi_attrib('Antigüedad')
+            row['Tipo Contrato']               = set_cfdi_attrib('TipoContrato')
+            row['Sindicalizado']               = set_cfdi_attrib('Sindicalizado')
+            row['Tipo Jornada']                = set_cfdi_attrib('TipoJornada')
+            row['Tipo Regimen']                = get_regime_payroll(set_cfdi_attrib('TipoRegimen'))
+            row['Num Empleado']                = set_cfdi_attrib('NumEmpleado')
+            row['Departamento']                = set_cfdi_attrib('Departamento')
+            row['Puesto']                      = set_cfdi_attrib('Puesto')
+            row['Riesgo Puesto']               = set_cfdi_attrib('RiesgoPuesto')
+            row['Periodicidad Pago']           = set_cfdi_attrib('PeriodicidadPago')
+            row['Banco']                       = set_cfdi_attrib('Banco')
+            row['Cuenta Bancaria']             = set_cfdi_attrib('CuentaBancaria')
+            row['Salario Base Cotiz']          = string_to_double(set_cfdi_attrib('SalarioBaseCotApor'))
+            row['SDI']                         = string_to_double(set_cfdi_attrib('SalarioDiarioIntegrado'))
+            row['Clave Entidad']               = set_cfdi_attrib('ClaveEntFed')
 
         # Add "nomina12:EntidadSNCF " attribs as new row
-        if node.tag.endswith("{http://www.sat.gob.mx/nomina12}EntidadSNCF"):
-            row['Origen Recursos']             = node.attrib.get('OrigenRecurso'               , '')
-            row['Monto Recursos Propios']      = node.attrib.get('MontoRecursoPropio'          , '')
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}EntidadSNCF"):
+            row['Origen Recursos']             = set_cfdi_attrib('OrigenRecurso')
+            row['Monto Recursos Propios']      = set_cfdi_attrib('MontoRecursoPropio')
 
         # Add "nomina12:Percepciones" attribs as new row
-        if node.tag.endswith("{http://www.sat.gob.mx/nomina12}Percepciones"):
-            row['Total Sueldos']               = string_to_double(node.attrib.get('TotalSueldos'                , ''))
-            row['Total Separac Indemniz']      = string_to_double(node.attrib.get('TotalSeparacionIndemnizacion', ''))
-            row['Total Jub Pens Retiro']       = string_to_double(node.attrib.get('TotalJubilacionPensionRetiro', ''))
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}Percepciones"):
+            row['Total Sueldos']               = string_to_double(set_cfdi_attrib('TotalSueldos'))
+            row['Total Separac Indemniz']      = string_to_double(set_cfdi_attrib('TotalSeparacionIndemnizacion'))
+            row['Total Jub Pens Retiro']       = string_to_double(set_cfdi_attrib('TotalJubilacionPensionRetiro'))
 
         # Add "nomina12:HorasExtra" attribs as new row
-        if node.tag.endswith("http://www.sat.gob.mx/nomina12}HorasExtra"):
-            row['Importe Horas Extras']        = string_to_double(node.attrib.get('ImportePagado'               , ''))
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}HorasExtra"):
+            row['Importe Horas Extras']        = string_to_double(set_cfdi_attrib('ImportePagado'))
         
         # Add "nomina12:SeparacionIndemnizacion" attribs as new row
-        if node.tag.endswith("http://www.sat.gob.mx/nomina12}SeparacionIndemnizacion"):
-            row['Importe Separac Indemniz']    = string_to_double(node.attrib.get('TotalPagado'                 , ''))
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}SeparacionIndemnizacion"):
+            row['Importe Separac Indemniz']    = string_to_double(set_cfdi_attrib('TotalPagado'))
 
         # Add "nomina12:Deducciones" attribs as new row
-        if node.tag.endswith("http://www.sat.gob.mx/nomina12}Deducciones"):
-            row['Total Otras Deducc']          = string_to_double(node.attrib.get('TotalOtrasDeducciones'       , ''))
-            row['Total Imptos Ret']            = string_to_double(node.attrib.get('TotalImpuestosRetenidos'     , ''))
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}Deducciones"):
+            row['Total Otras Deducc']          = string_to_double(set_cfdi_attrib('TotalOtrasDeducciones'))
+            row['Total Imptos Ret']            = string_to_double(set_cfdi_attrib('TotalImpuestosRetenidos'))
 
         # Add "nomina12:OtroPago" attribs as new row
-        if node.tag.endswith("http://www.sat.gob.mx/nomina12}OtroPago"):
-            row['Importe Otro Pago']           = string_to_double(node.attrib.get('Importe'                     , ''))
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}OtroPago"):
+            row['Importe Otro Pago']           = string_to_double(set_cfdi_attrib('Importe'))
 
         # Add "nomina12:SubsidioAlEmpleo" attribs as new row
-        if node.tag.endswith("http://www.sat.gob.mx/nomina12}SubsidioAlEmpleo"):
-            row['SPE causado']                 = node.attrib.get('SubsidioCausado'             , '')
+        if str(node.tag).endswith("{http://www.sat.gob.mx/nomina12}SubsidioAlEmpleo"):
+            row['SPE causado']                 = string_to_double(set_cfdi_attrib('SubsidioCausado'))
         
         # Add "cfdi:TimbreFiscalDigital" attribs as new row
-        if node.tag.endswith('TrasladoDR'):
-            row['Objeto Impuesto_DR']          = string_to_double(node.attrib.get('ImporteDR', ''))
-            row['Importe Impuesto 16%_DR']     = string_to_double(node.attrib.get('ImporteDR', ''))
+        if str(node.tag).endswith('TrasladoDR'):
+            row['Objeto Impuesto_DR']          = get_DR_taxes_type(set_cfdi_attrib('ImpuestoDR'))
+            row['Importe Impuesto 16%_DR']     = string_to_double(set_cfdi_attrib('ImporteDR'))
 
-        if node.tag.endswith('Conceptos'):
+        if str(node.tag).endswith('Conceptos'):
             # Create an empty dictionary to store the concept data, set child node to parse 
             concept_list    = []
             prod_list       = []
@@ -255,66 +244,94 @@ def cfdi_row_collector(node, row, filename, option, rfc):
             row['Lista Unidad']             = list_to_string(unit_list)
             
         # Add "cfdi:Retenciones" attribs as new row
-        if node.tag.endswith('Impuestos'):
+        if str(node.tag).endswith('Impuestos'):
             # set child node to parse 
-            taxes       = node.xpath('//cfdi:Comprobante/cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces=node.nsmap)
-            transfers   = node.xpath('//cfdi:Comprobante/cfdi:Impuestos/cfdi:Retenciones/cfdi:Retencion', namespaces=node.nsmap)
+            taxes = node.xpath('//cfdi:Comprobante/cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', namespaces=node.nsmap)
+            transfers = node.xpath('//cfdi:Comprobante/cfdi:Impuestos/cfdi:Retenciones/cfdi:Retencion', namespaces=node.nsmap)
 
-            isr     = 0.0
-            ret_isr = 0.0
-            iva     = 0.0
-            ret_iva = 0.0 
-            ieps    = 0.0
-            ret_ieps= 0.0
-            
-            for tax in taxes:
-                if   tax.get('Impuesto') == "001":
-                    isr += string_to_double(tax.get('Importe')) 
-                elif tax.get('Impuesto') == "002":
-                    iva += string_to_double(tax.get('Importe'))
-                elif tax.get('Impuesto') == "003":
-                    ieps += string_to_double(tax.get('Importe'))
-
-            for transfer in transfers:
-                if   transfer.get('Impuesto') == "001":
-                    ret_isr += string_to_double(transfer.get('Importe')) 
-                elif transfer.get('Impuesto') == "002":
-                    ret_iva += string_to_double(transfer.get('Importe'))
-                elif transfer.get('Impuesto') == "003":
-                    ret_ieps += string_to_double(transfer.get('Importe'))
-
-            columns = {
-                isr: 'ISR',
-                iva: 'IVA 16%',
-                ieps: 'IEPS',
-                ret_isr: 'Retención ISR',
-                ret_iva: 'Retención IVA',
-                ret_ieps: 'Retención IEPS',
+            # Usar un diccionario auxiliar para rastrear la sumatoria de valores para cada impuesto
+            impuestos = {
+                "001": 0.0,
+                "002": 0.0,
+                "003": 0.0
             }
 
-            for key, value in columns.items():
-                if key > 0:
-                    row[value] = key
+            retenciones = {
+                "001": 0.0,
+                "002": 0.0,
+                "003": 0.0
+            }
+
+            for tax in taxes:
+                if tax.get('TipoFactor') == 'Exento':
+                    continue
+
+                impuesto = tax.get('Impuesto')
+                importe = string_to_double(tax.get('Importe'))
+                impuestos[impuesto] += importe
+
+            for transfer in transfers:
+                if transfer.get('TipoFactor') == 'Exento':
+                    continue
+
+                impuesto = transfer.get('Impuesto')
+                importe = string_to_double(transfer.get('Importe'))
+                retenciones[impuesto] += importe
+
+            rows = {
+                'ISR': impuestos["001"],
+                'IVA 16%': impuestos["002"],
+                'IEPS': impuestos["003"],
+                'Retención ISR': retenciones["001"],
+                'Retención IVA': retenciones["002"],
+                'Retención IEPS': retenciones["003"]
+            }
+
+            # Eliminar las entradas con valores 0
+            rows = {key: value for key, value in rows.items() if value != 0.0}
+
+            for key, value in rows.items():
+                row[key] = value
+
 
         # Add "cfdi:Pagos" attribs as new row
-        if node.tag.endswith('Pagos'):
-            # Create an empty dictionary to store the payment data
-            payment_list = []
-            
-            # set child node to parse with namespace
-            try:
-                # set payment namespace for CFDI version
-                namespace = 'pago10'
-                if node.attrib.get('Version') == '2.0':
-                    namespace = 'pago20'
+        if str(node.tag).endswith('Pagos'):
 
-                payments = node.xpath(f'//{namespace}:Pago/{namespace}:DoctoRelacionado', namespaces=node.nsmap)
+            namespaces={
+                'pago10': 'http://www.sat.gob.mx/Pagos',
+                'pago20': 'http://www.sat.gob.mx/Pagos20'
+            }
+
+            version = 'pago20'
+            if set_cfdi_attrib('Version') == '1.0':
+                version = 'pago10'
             
-            except etree.XPathEvalError as e:
-                return row
-            
-            # Iterate over the cfdi:Concept elements and add their data to the dictionary 
+            # Create an empty dictionary to store the payment data
+            payments = []
+
+            try:
+                payments = node.xpath(f'//{version}:Pago', namespaces=namespaces)
+            except Exception as e :
+                print(e)
+
             for payment in payments:
+                row['Fecha Pago']                  = datetime.strptime(payment.get('FechaPago'), '%Y-%m-%dT%H:%M:%S')
+                row['Forma Pago']                  = get_payment_type_p(payment.get('FormaDePagoP'))
+                row['Moneda Pago']                 = payment.get('MonedaP')
+                row['Monto UUID Relac']            = string_to_double(payment.get('Monto'))
+        
+        # Add "cfdi:Pagos" attribs as new row
+        #if str(node.tag).endswith('Pago'):
+            
+            payment_list = []
+
+            try:
+                related_payment = node.xpath(f'//{version}:Pago/{version}:DoctoRelacionado', namespaces=namespaces)
+            except Exception as e :
+                print(e)
+
+            # Iterate over the cfdi:Concept elements and add their data to the dictionary 
+            for payment in related_payment:
                 payment_data = { 
                     'UUID Relacionado'  : payment.get('IdDocumento'         , ''),
                     'Serie Relac'       : payment.get('Serie'               , ''),
@@ -324,18 +341,14 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                     'Importe Pagado'    : payment.get('ImpPagado'           , ''),
                     'Por Pagar'         : payment.get('ImpSaldoInsoluto'    , '')
                 }
-                payment_list.append(json.loads(json.dumps(payment_data, ensure_ascii=False)))
-
-            row['Lista de Pagos']              = json.dumps(payment_list, ensure_ascii=False)
-            row['Fecha Pago']                  = node.attrib.get('FechaPago'        , '')
-            row['Moneda Pago']                 = node.attrib.get('MonedaP'          , '')
-            if not (option == 'PAGO_R' or option == 'PAGO_E'):
-                row['Tipo Cambio P']                 = node.attrib.get('TipoCambioP'    , '')
-            row['Monto UUID Relac']            = node.attrib.get('Monto'            , '')
-
+                payment_list.append(payment_data)
+            
+            row['Lista de Pagos'] = clean_concept(payment_list)
+            
         # returns the matrix with the rows and their respective information
         return row
 
     # understand that the exception that is handled is for cases where fila[row name] does not exist
-    except:
-        raise Exception('')
+    except Exception as e:
+        print (f'Error mapping : {e} in {node.tag}')
+        

@@ -97,7 +97,7 @@ def cfdi_sorter(rfc, directory):
                 raise Exception(f"E2: {filename} does not meet the requirements of the CFDI sorter standard.")
             
             # get SAT status
-            sat_status = 'Cancelado'
+            sat_status = 'Desconocido'
             try:
                 sat_status = get_sat_status(emisor, receptor, total, uuid)
             except:
