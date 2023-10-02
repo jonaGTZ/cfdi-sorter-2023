@@ -312,7 +312,6 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                 row['Monto UUID Relac']            = string_to_double(payment.get('Monto'))
         
         # Add "cfdi:Pagos" attribs as new row
-        #if str(node.tag).endswith('Pago'):
             
             payment_list = []
 
@@ -334,7 +333,8 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                 }
                 payment_list.append(payment_data)
             
-            row['Lista de Pagos'] = clean_concept(payment_list)
+            if payment_list:
+                row['Lista de Pagos'] = clean_concept(payment_list)
             
         # returns the matrix with the rows and their respective information
         return row
