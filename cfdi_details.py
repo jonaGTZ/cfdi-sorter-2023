@@ -237,3 +237,77 @@ def get_payment_type_p(type):
         '43': '43 - Aplicación de pagos'
     }
     return payment_methods_P.get(type, default_value)
+
+def get_day_type(type):
+
+    default_value=f'' # value doesn't exist
+    
+    day_type = {
+        '01': '01 - Diurna',
+        '02': '02 - Nocturna',
+        '03': '03 - Mixta',
+        '04': '04 - Por hora',
+        '05': '05 - Reducida',
+        '06': '06 - Continuada',
+        '07': '07 - Partida',
+        '08': '08 - Por turnos',
+        '09': '09 - Descanso',
+        '10': '10 - Días naturales',
+        '11': '11 - Indeterminada'
+    }
+
+    return day_type.get(type, default_value)
+
+def get_contract_type(type):
+
+    default_value=f'' # value doesn't exist
+    
+    contract_type = {
+        '01': '01 - Contrato a plazo fijo',
+        '02': '02 - Contrato a plazo indefinido',
+        '03': '03 - Contrato de obra o labor determinada',
+        '04': '04 - Contrato de temporada',
+        '05': '05 - Contrato eventual',
+        '06': '06 - Contrato de aprendizaje',
+        '07': '07 - Contrato por jornada parcial',
+        '08': '08 - Contrato por jornada completa',
+        '09': '09 - Contrato por hora',
+        '10': '10 - Contrato de tiempo compartido',
+        '11': '11 - Contrato por comisión',
+        # Puedes agregar más elementos según tus necesidades
+    }
+
+    return contract_type.get(type, default_value)
+
+def get_periodicity_type(type):
+
+    default_value=f'' # value doesn't exist
+    
+    periodicity_type = {
+        '01': '01 - Diario',
+        '02': '02 - Semanal',
+        '03': '03 - Catorcenal',
+        '04': '04 - Mensual',
+        '05': '05 - Bimestral',
+        '06': '06 - Unidad de obra',
+        '07': '07 - Comisión',
+        '08': '08 - Precio alzado',
+        '09': '09 - Otros',
+        # Puedes agregar más elementos según tus necesidades
+    }
+    return periodicity_type.get(type, default_value)
+
+def get_position_risk_type(type):
+
+    default_value=f'' # value doesn't exist
+    
+    position_risk_type = {
+        '01': '01 - Riesgo mínimo',
+        '02': '02 - Riesgo bajo',
+        '03': '03 - Riesgo medio',
+        '04': '04 - Riesgo alto',
+        '05': '05 - Riesgo máximo',
+        # Puedes agregar más elementos según tus necesidades
+    }
+
+    return position_risk_type.get(type, default_value)
