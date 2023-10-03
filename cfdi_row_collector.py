@@ -55,7 +55,7 @@ def cfdi_row_collector(node, row, filename, option, rfc):
             row['Serie']            = set_cfdi_attrib('Serie')
             row['Folio']            = set_cfdi_attrib('Folio')
             row['Tipo Comprobante'] = get_cfdi_type(set_cfdi_attrib('TipoDeComprobante'))
-            row['Forma Pago']       = get_payment_form(set_cfdi_attrib('FormaPago'))
+            row['Metodo Pago']      = get_payment_method(set_cfdi_attrib('MetodoPago'))
             row['Subtotal']         = string_to_double(set_cfdi_attrib('SubTotal'))
             row['Descuento']        = string_to_double(set_cfdi_attrib('Descuento'))
             row['Total']            = string_to_double(set_cfdi_attrib('Total'))
@@ -67,8 +67,8 @@ def cfdi_row_collector(node, row, filename, option, rfc):
             row['No Certificado']   = set_cfdi_attrib('NoCertificado')
             row['Certificado']      = set_cfdi_attrib('Certificado')
             #if not (option == 'PAGO_R' or option == 'PAGO_E'):
-            row['Metodo Pago']      = get_payment_method(set_cfdi_attrib('MetodoPago'))
             #if option == 'DES_BON_DEV' or option == 'GASTO':
+            row['Forma Pago']       = get_payment_form(set_cfdi_attrib('FormaPago'))
             row['Condiciones Pago'] = set_cfdi_attrib('CondicionesDePago')
 
         # Add "cfdi:CfdiRelacionados" attribs as new row
