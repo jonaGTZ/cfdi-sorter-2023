@@ -42,7 +42,7 @@ def list_to_string(strings):
         key += string + ' '
     return key
 
-def cfdi_row_collector(node, row, filename, option, rfc):
+def cfdi_row_collector(node, row, option, rfc):
 
     def set_cfdi_attrib(attrib):
         return node.attrib.get(attrib, '')
@@ -55,21 +55,20 @@ def cfdi_row_collector(node, row, filename, option, rfc):
             row['Serie']            = set_cfdi_attrib('Serie')
             row['Folio']            = set_cfdi_attrib('Folio')
             row['Tipo Comprobante'] = get_cfdi_type(set_cfdi_attrib('TipoDeComprobante'))
-            row['Metodo Pago']      = get_payment_method(set_cfdi_attrib('MetodoPago'))
             row['Subtotal']         = string_to_double(set_cfdi_attrib('SubTotal'))
-            row['Descuento']        = string_to_double(set_cfdi_attrib('Descuento'))
             row['Total']            = string_to_double(set_cfdi_attrib('Total'))
             row['Moneda']           = set_cfdi_attrib('Moneda')
-            row['Tipo Cambio']      = get_exchange_type(set_cfdi_attrib('TipoCambio'))
             row['CP Emisor']        = set_cfdi_attrib('LugarExpedicion')
             row['Moneda']           = set_cfdi_attrib('Moneda')
             row['Sello']            = set_cfdi_attrib('Sello')
             row['No Certificado']   = set_cfdi_attrib('NoCertificado')
             row['Certificado']      = set_cfdi_attrib('Certificado')
-            #if not (option == 'PAGO_R' or option == 'PAGO_E'):
-            #if option == 'DES_BON_DEV' or option == 'GASTO':
-            row['Forma Pago']       = get_payment_form(set_cfdi_attrib('FormaPago'))
-            row['Condiciones Pago'] = set_cfdi_attrib('CondicionesDePago')
+            if not (option == 'PAGO_R' or option == 'PAGO_E'):
+                row['Forma Pago']       = get_payment_form(set_cfdi_attrib('FormaPago'))
+                row['Tipo Cambio']      = get_exchange_type(set_cfdi_attrib('TipoCambio'))
+                row['Condiciones Pago'] = set_cfdi_attrib('CondicionesDePago')
+                row['Descuento']        = string_to_double(set_cfdi_attrib('Descuento'))
+                row['Metodo Pago']      = get_payment_method(set_cfdi_attrib('MetodoPago'))
 
         # Add "cfdi:CfdiRelacionados" attribs as new row
         if str(node.tag).endswith('CfdiRelacionados'):
@@ -306,10 +305,11 @@ def cfdi_row_collector(node, row, filename, option, rfc):
                 print(e)
 
             for payment in payments:
-                row['Fecha Pago']                  = datetime.strptime(payment.get('FechaPago'), '%Y-%m-%dT%H:%M:%S')
-                row['Forma Pago']                  = get_payment_type_p(payment.get('FormaDePagoP'))
-                row['Moneda Pago']                 = payment.get('MonedaP')
-                row['Monto UUID Relac']            = string_to_double(payment.get('Monto'))
+                row['Tipo Cambio Pago']     = get_exchange_type(payment.get('TipoCambioP'))
+                row['Fecha Pago P']         = datetime.strptime(payment.get('FechaPago'), '%Y-%m-%dT%H:%M:%S')
+                row['Forma Pago P']         = get_payment_type_p(payment.get('FormaDePagoP'))
+                row['Moneda Pago']          = payment.get('MonedaP')
+                row['Monto UUID Relac']     = string_to_double(payment.get('Monto'))
         
         # Add "cfdi:Pagos" attribs as new row
             
@@ -335,7 +335,18 @@ def cfdi_row_collector(node, row, filename, option, rfc):
             
             if payment_list:
                 row['Lista de Pagos'] = clean_concept(payment_list)
+
+        # specific complementary nodes for each report
+        if (option == 'GASTO'):
+            if str(node.tag).endswith('implocal:ImpuestosLocales'):
+                row['Total Retenciones Locales'] = set_cfdi_attrib('TotaldeRetenciones')
+                #row['Total de Traslados']        = set_cfdi_attrib('TotaldeTraslados')
             
+            if str(node.tag).endswith('implocal:RetencionesLocales'):
+                row['Imp Local Retenido']          = set_cfdi_attrib('ImpLocRetenido')
+                row['Tasa Imp Local Retenido']     = set_cfdi_attrib('TasadeRetencion')
+                row['Importe Imp Local Retenido']  = set_cfdi_attrib('Importe')
+
         # returns the matrix with the rows and their respective information
         return row
 

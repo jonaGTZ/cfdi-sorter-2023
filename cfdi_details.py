@@ -7,7 +7,7 @@
 
 def get_tax_regime(regimer):
 
-    default_value=f'Régimen no especificado {regimer}'
+    default_value=f'No especificado {regimer}'
     
     tax_regime = {
         '601': '601 - General de Ley Personas Morales',
@@ -43,7 +43,7 @@ def get_tax_regime(regimer):
 
 def get_cfdi_usage(usage):
     
-    default_value=f'Uso del CFDI no especificado {usage}'
+    default_value=f'No especificado {usage}'
     
     cfdi_usage = {
         'G01': 'G01 - Adquisición de mercancías',
@@ -68,13 +68,15 @@ def get_cfdi_usage(usage):
         'D09': 'D09 - Depósitos en cuentas para el ahorro, primas que tengan como base planes de pensiones.',
         'D10': 'D10 - Pagos por servicios educativos (colegiaturas)',
         'P01': 'P01 - Por definir',
+        'CP01':'CP01 - Emisión de comprobantes de pagos complementarios',
+        'S01':'S01 - Sin efectos fiscales',
     }
 
     return cfdi_usage.get(usage, default_value)
 
 def get_payment_method(payment):
 
-    default_value=f'Método de pago no especificado {payment}'
+    default_value=f'No especificado {payment}'
 
     payment_methods = {
         'PUE': 'PUE - Pago en una sola exhibición',
@@ -85,7 +87,7 @@ def get_payment_method(payment):
 
 def get_payment_form(payment):
 
-    default_value=f'Forma de pago no especificada {payment}'
+    default_value=f'No especificado {payment}'
     
     payment_forms = {
         '01': '01 - Efectivo',
@@ -116,7 +118,7 @@ def get_payment_form(payment):
 
 def get_cfdi_type(cfdi):
     
-    default_value=f'Tipo de CFDI no especificado {cfdi}'
+    default_value=f'No especificado {cfdi}'
 
     cfdi_types = {
         'I': 'I - Ingreso',
@@ -130,7 +132,7 @@ def get_cfdi_type(cfdi):
 
 def get_regime_payroll(regime):
     
-    default_value=f'Regimen no especificado {regime}'
+    default_value=f'No especificado {regime}'
 
     regime_types = {
         '02': '02 - Sueldos',
@@ -144,7 +146,7 @@ def get_regime_payroll(regime):
 
 def get_related_cfdi_type(type):
 
-    default_value=f'tipo no especificado {type}'
+    default_value=f'No especificado {type}'
 
     related_types = {
         '01': '01 - Notas de Crédito de Documentos Relacionados',
@@ -162,18 +164,18 @@ def get_related_cfdi_type(type):
 
 def get_exchange_type(type):
 
-    default_value=f'' # value doesn't exist
+    default_value=f'No especificado {type}' # value doesn't exist
 
     related_types = {
-        '01': '01 - MXN',
-        '02': '02 - XXX',
+        '1': '1 - MXN',
+        '2': '2 - XXX',
     }
 
     return related_types.get(type, default_value)
 
 def get_DR_taxes_type(type):
 
-    default_value=f'' # value doesn't exist
+    default_value=f'No especificado {type}' # value doesn't exist
 
     taxes_DR = {
         '001': '001 - IVA',
@@ -209,7 +211,7 @@ def get_DR_taxes_type(type):
 
 def get_payment_type_p(type):
 
-    default_value=f'' # value doesn't exist
+    default_value=f'No especificado {type}' # value doesn't exist
     
     payment_methods_P = {
         '01': '01 - Efectivo',
@@ -240,7 +242,7 @@ def get_payment_type_p(type):
 
 def get_day_type(type):
 
-    default_value=f'' # value doesn't exist
+    default_value=f'No especificado {type}' # value doesn't exist
     
     day_type = {
         '01': '01 - Diurna',
@@ -260,7 +262,7 @@ def get_day_type(type):
 
 def get_contract_type(type):
 
-    default_value=f'' # value doesn't exist
+    default_value=f'No especificado {type}' # value doesn't exist
     
     contract_type = {
         '01': '01 - Contrato a plazo fijo',
@@ -273,15 +275,14 @@ def get_contract_type(type):
         '08': '08 - Contrato por jornada completa',
         '09': '09 - Contrato por hora',
         '10': '10 - Contrato de tiempo compartido',
-        '11': '11 - Contrato por comisión',
-        # Puedes agregar más elementos según tus necesidades
+        '11': '11 - Contrato por comisión'
     }
 
     return contract_type.get(type, default_value)
 
 def get_periodicity_type(type):
 
-    default_value=f'' # value doesn't exist
+    default_value=f'No especificado {type}' # value doesn't exist
     
     periodicity_type = {
         '01': '01 - Diario',
@@ -292,14 +293,13 @@ def get_periodicity_type(type):
         '06': '06 - Unidad de obra',
         '07': '07 - Comisión',
         '08': '08 - Precio alzado',
-        '09': '09 - Otros',
-        # Puedes agregar más elementos según tus necesidades
+        '09': '09 - Otros'
     }
     return periodicity_type.get(type, default_value)
 
 def get_position_risk_type(type):
 
-    default_value=f'' # value doesn't exist
+    default_value=f'No especificado {type}' # value doesn't exist
     
     position_risk_type = {
         '01': '01 - Riesgo mínimo',
@@ -307,7 +307,6 @@ def get_position_risk_type(type):
         '03': '03 - Riesgo medio',
         '04': '04 - Riesgo alto',
         '05': '05 - Riesgo máximo',
-        # Puedes agregar más elementos según tus necesidades
     }
 
     return position_risk_type.get(type, default_value)

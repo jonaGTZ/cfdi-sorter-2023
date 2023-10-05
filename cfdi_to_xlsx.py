@@ -62,7 +62,7 @@ def cfdi_to_dict(option, rfc):
                             fila = json.load(f)
                             for nodo in arbol.iter():
                                 try:
-                                    fila = cfdi_row_collector(nodo, fila, filename, option, rfc)
+                                    fila = cfdi_row_collector(nodo, fila, option, rfc)
                                 except:
                                     raise Exception(f'E2: an error occurred filling the dictionary {filename}')
                     except:
